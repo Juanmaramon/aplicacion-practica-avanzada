@@ -9,6 +9,7 @@ existe entre las acciones y los dispositivos.
 
 enum eInputActions {
     eIA_CloseApplication = 0, //Acción para cerrar la aplicación. 
+	eIA_ReloadEffectManager = 1, // Reload action.
     eIA_Count   //Indica cuantas acciones de entrada hay.
 }; 
 

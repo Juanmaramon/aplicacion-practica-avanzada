@@ -9,7 +9,7 @@
 #include "..\Gameplay\Scene\Scene.h"
 #include "..\Gameplay\Scene\SceneManager.h"
 #include "..\Graphics\Materials\MaterialManager.h"
-#include "..\Graphics\Effects\EffectManager.h";
+#include "..\Graphics\Effects\EffectManager.h"
 
 //Para configurar el InputManager hay que llamar a su Init (en cGame::Init)
 //pasándole la tabla kaActionMapping (de InputConfiguration.cpp).
@@ -111,7 +111,12 @@ void cGame::Update( float lfTimestep )
 	mfAcTime += lfTimestep;
 
 	//Se actualiza el InputManager.
-	cInputManager::Get().Update(lfTimestep);		
+	cInputManager::Get().Update(lfTimestep);
+
+	bool lbreloadEffect = IsPressed(eIA_ReloadEffectManager);
+	if (lbreloadEffect) {
+		cEffectManager::Get().Reload();
+	}
 	
 	//Se comprueba si hay que cerrar la aplicación, por ejemplo a causa de 
 	// que el usuario haya cerrado la ventana. 
