@@ -1,0 +1,25 @@
+<SkeletalModel skeletonfile = "./SkeletonModel/skeleton.csf" >
+	<Animation name = "Idle" file = "./SkeletonModel/skeleton_idle.caf" type = "CYCLE" />
+	<Animation name = "Jog" file = "./SkeletonModel/skeleton_jog.caf" type = "CYCLE" />
+	<Animation name = "Wave" file = "./SkeletonModel/skeleton_wave.caf" type = "ACTION" />
+	
+	<Mesh file = "./SkeletonModel/skeleton_calf_left.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_calf_right.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_chest.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_foot_left.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_foot_right.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_hair.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_hand_left.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_hand_right.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_head.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_lowerarm_left.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_lowerarm_right.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_neck.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_pelvis.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_spine_lower.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_spine_upper.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_thigh_left.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_thigh_right.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_upperarm_left.cmf" />
+	<Mesh file = "./SkeletonModel/skeleton_upperarm_right.cmf" />
+</SkeletalModel>
