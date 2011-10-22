@@ -31,7 +31,7 @@ protected:
 		// Instance that manages skeletal animation part of the engine
 		cResourceHandle mSkeletalMesh;
 		// Bullet physics object
-		cPhysics mPhysics;
+		//cPhysics mPhysics;
 	
 public:
 	
@@ -58,7 +58,7 @@ public:
 	float mfAcTime;
 
 	// Object for skeletal meshes
-	cObject mObject;
+	cPhysicObject mObject;
 
 	// Physic objects
 	std::vector<cPhysicObject> maSphereObjects;
