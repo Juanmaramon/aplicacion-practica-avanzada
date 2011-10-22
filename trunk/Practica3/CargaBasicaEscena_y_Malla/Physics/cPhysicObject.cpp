@@ -26,3 +26,26 @@ void cPhysicObject::Update( float lfTimestep ){
 void cPhysicObject::CreatePhysics( cPhysicModel* lpModel ){
 	mpPhysicBody = cPhysics::Get( ).GetNewBody(lpModel->GetShape( ), lpModel->GetMass( ), mWorldMatrix.GetPosition( ) );
 }
+
+void cPhysicObject::SetKinematic( ){
+	mpPhysicBody->setCollisionFlags( mpPhysicBody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+	mpPhysicBody->setActivationState( DISABLE_DEACTIVATION );
+}
+
+void cPhysicObject::SetPosition( const cVec3 &lPosition ){
+	mPosition = lPosition;
+	cMatrix lTranslationMatrix;
+	lTranslationMatrix.LoadIdentity( );
+	lTranslationMatrix.SetPosition( lPosition );
+	// Change our own Matrix for drawing purposes
+	SetWorldMatrix( lTranslationMatrix );
+	// Inform Bullet of the new Position
+	if ( mpPhysicBody && mpPhysicBody->getMotionState( ) ) {
+		mpPhysicBody->getMotionState()->setWorldTransform(
+		cPhysics::Local2Bullet( lTranslationMatrix ));
+	}
+}
+
+cVec3 cPhysicObject::GetPosition( ){
+	return mPosition;
+}

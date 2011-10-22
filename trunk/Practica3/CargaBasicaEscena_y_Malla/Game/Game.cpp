@@ -23,7 +23,7 @@ bool cGame::Init()
 	mbFinish = false;
 	//	LoadResources();
 	//Se rellena la estructura de tipo cApplicationProperties: 
-	mProperties.macApplicationName = "Práctica 2: Animación esqueletal";
+	mProperties.macApplicationName = "Práctica3: Fisicas";
 	mProperties.mbFullscreen = false;
 	mProperties.muiBits = 16;
 	mProperties.muiWidth = 640;
@@ -47,7 +47,7 @@ bool cGame::Init()
 			//m3DCamera.SetLookAt( cVec3(5.0f, 5.f, 5.f), cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );		
 
 			//Se aleja la cámara para ver bien la escena que vamos a cargar posteriormente.
-			m3DCamera.SetLookAt( cVec3(5.f, 5.f, 5.f),cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );
+			m3DCamera.SetLookAt( cVec3(15.f, 15.f, 15.f),cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );
 
 			//Se inicializa la clase cInputManager que representa el gestor de entrada (keyboard, gamepad, mouse, ...).
 			//Se le pasa la tabla "kaActionMapping" (de InputConfiguration.cpp) que indica la relación entre las acciones y los dispositivos.
@@ -55,7 +55,7 @@ bool cGame::Init()
 			cInputManager::Get().Init( kaActionMapping, eIA_Count );
 
 			// Initialization of physics object 
-			mPhysics.Init();
+			cPhysics::Get().Init();
 
 			//Se inicializa la clase que gestiona la texturas indicando que habrá 1, por ejemplo.
 			cTextureManager::Get().Init(10);
@@ -134,6 +134,17 @@ bool cGame::Init()
 			cMatrix lMatrix;
 			lMatrix.LoadScale(0.01f);
 			mObject.SetWorldMatrix(lMatrix);
+
+			mBoxModel.InitBox( 0.0f, cVec3( 0.3f, 1.0f, 0.3f ) );
+			mObject.CreatePhysics( &mBoxModel );
+			lScaleMatrix.LoadScale(0.01f);
+			mObject.SetScaleMatrix( lScaleMatrix );
+
+			lOffsetMatrix.LoadTranslation( cVec3( 0.0f, -1.0f, 0.0f ) );
+			mObject.SetDrawOffsetMatrix( lOffsetMatrix );
+			mObject.SetKinematic( );
+			mObject.SetPosition( cVec3( 1.0f, 1.0f, 0.0f ) );
+
 		}		
 		else
 		{
@@ -166,6 +177,31 @@ void cGame::Update( float lfTimestep )
 		cEffectManager::Get().Reload();
 	}
 
+	bool lbmoveFront = IsPressed( eIA_MoveFront );
+	bool lbmoveBack = IsPressed( eIA_MoveBack );
+	bool lbmoveLeft = IsPressed( eIA_MoveLeft );
+	bool lbmoveRight = IsPressed( eIA_MoveRight );
+
+
+	if ( lbmoveFront ) {
+		mObject.SetPosition( mObject.GetPosition( ) + cVec3(-0.1f, 0.0f, 0.0f ) );
+	}else if ( lbmoveBack  ) {
+		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.1f, 0.0f, 0.0f ) );
+	}
+	if ( lbmoveLeft  ) {
+		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, 0.1f ) );
+	}else if ( lbmoveRight  ) {
+		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, -0.1f ) );
+	}
+
+	// Update bullet physics object
+	cPhysics::Get().Update(lfTimestep);
+
+	// Update physic objects
+	for ( unsigned int luiIndex = 0; luiIndex < 10; ++luiIndex) {
+		maSphereObjects[luiIndex].Update(lfTimestep);
+	}
+
 	// Check if the animation keys (stop/start) are pressed
 	cSkeletalMesh* lpSkeletonMesh =(cSkeletalMesh*)mSkeletalMesh.GetResource();
 
@@ -192,14 +228,6 @@ void cGame::Update( float lfTimestep )
 		lpSkeletonMesh->PlayAnim("Wave", 1.0f, 0.1f, 0.1f);
 	}else if (lbStopWavePressed){
 		lpSkeletonMesh->StopAnim("Wave", 0.1f);
-	}
-
-	// Update bullet physics object
-	mPhysics.Update(lfTimestep);
-
-	// Update physic objects
-	for ( unsigned int luiIndex = 0; luiIndex < 10; ++luiIndex) {
-		maSphereObjects[luiIndex].Update(lfTimestep);
 	}
 
 	// Updates skeleton state
@@ -270,7 +298,7 @@ void cGame::Render()
 	lpSkeletonMesh->RenderSkeleton();
 
 	// 4.0) Draws debug info of bullet
-	mPhysics.Render();
+	cPhysics::Get().Render();
 
 	// Render physic objects
 	for ( unsigned int luiIndex = 0; luiIndex < 10; ++luiIndex) {
@@ -328,7 +356,7 @@ bool cGame::Deinit()
     //Se libera el gestor de texturas.
 	cTextureManager::Get().Deinit();  
 	// Deinitialization of physics object 
-	mPhysics.Deinit();
+	cPhysics::Get().Deinit();
 	//Se libera el InputManager:
 	cInputManager::Get().Deinit();
 	//Se libera OpenGL (clase cGraphicManager):

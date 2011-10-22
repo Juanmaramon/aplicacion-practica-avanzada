@@ -15,10 +15,14 @@ public:
 	inline cMatrix GetScaleMatrix( ) { return mScaleMatrix; }
 	inline void SetDrawOffsetMatrix(const cMatrix& lOffset){ mDrawOffsetMatrix = lOffset; }
 	inline cMatrix GetDrawOffsetMatrix( ) { return mDrawOffsetMatrix; }
+	void SetKinematic( );
+	void SetPosition( const cVec3 &lPosition );
+	cVec3 GetPosition( );
 private:
 	btRigidBody *mpPhysicBody;
 	cMatrix mScaleMatrix;
 	cMatrix mDrawOffsetMatrix;
+	cVec3 mPosition;
 };
 
 #endif
