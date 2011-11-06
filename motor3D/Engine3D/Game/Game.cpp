@@ -90,15 +90,16 @@ bool cGame::Init()
 			cSceneManager::Get().Init(10);         
 
 			//Se carga la escena.
-			mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/dragonsmall.DAE" ); 		
-
+			//mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/dragonsmall.DAE" ); 		
+			mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/duck_triangulate.dae" ); 
+			
 			// Physics object in the game
 			cPhysicObject mModelObject = *((cPhysicObject*) ((cScene *)mScene.GetResource())->getSubObject( 0 ));
 
 			cMatrix lScaleMatrix, lOffsetMatrix;
 
 			// Preparamos ya la escala y el offset que usaran el resto de objetos
-			lScaleMatrix.LoadScale( 1.0f);
+			lScaleMatrix.LoadScale( 1.0f );
 			lOffsetMatrix.LoadTranslation( cVec3( 0.0f, 0.0f, 0.0f ) );
 			// Inicializamos el modelo de esfera
 			mSphereModel.InitSphere( 1.0f, 2.0f );
