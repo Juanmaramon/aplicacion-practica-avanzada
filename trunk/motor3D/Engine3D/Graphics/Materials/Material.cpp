@@ -96,8 +96,7 @@ bool cMaterial::Init( const std::string &lacNameID, const std::string &lacFile )
 		cTextureData lData;
 		std::string lacTextureFile = lpElem->Attribute("file");
 		lData.macShaderTextureID = lpElem->Attribute("name");
-		lData.mTexture = cTextureManager::Get().LoadResource(
-		lacTextureFile, lacTextureFile);
+		lData.mTexture = cTextureManager::Get().LoadResource(lacTextureFile, lacTextureFile);
 		assert(lData.mTexture.IsValidHandle());
 		maTextureData.push_back(lData);
 	}
@@ -133,8 +132,15 @@ void cMaterial::PrepareRender() {
 	cMatrix lWorldInverseTranposeMatrix = cGraphicManager::Get().GetWorldMatrix();
 	lWorldInverseTranposeMatrix.Invert();
 	lWorldInverseTranposeMatrix.Transpose();
-	lpEffect->SetParam("World", lWorldMatrix );
-	lpEffect->SetParam("WorldInverseTranspose", lWorldInverseTranposeMatrix );
+	lpEffect->SetParam("world", lWorldMatrix );
+	lpEffect->SetParam("worldInverseTranspose", lWorldInverseTranposeMatrix );
+	cTextureData lData;
+	lData.macShaderTextureID = "displacementMap_texture";
+	lData.mTexture = cTextureManager::Get().LoadResource("displacementMap_texture", "./Data/Scene/images/height1.dds");
+	OutputDebugString(lpEffect->GetNameID().c_str());
+	if (lpEffect->GetNameID().compare("terrain")){
+		lpEffect->SetParam("displacementMap", lData.mTexture );
+	}
 	cCamera * lpCamera = cGraphicManager::Get().GetActiveCamera();
 	cVec3 lCameraPos = lpCamera->GetView().GetPosition();
 	lpEffect->SetParam("cameraPos", lCameraPos );
