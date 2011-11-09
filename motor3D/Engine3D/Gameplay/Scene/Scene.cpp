@@ -82,8 +82,7 @@ void cScene::ProcessScene( const aiScene* lpScene )
 		lMaterialData.mpMaterial = lpScene->mMaterials[luiIndex];
 		// Load the resource
 		cResourceHandle lHandle;
-		lHandle = cMaterialManager::Get().LoadResource(lName.data,
-		&lMaterialData, 0);
+		lHandle = cMaterialManager::Get().LoadResource(lName.data, &lMaterialData, 0);
 		// Save the material on a vector in the Scene
 		mMaterialList.push_back(lHandle);
 	}
