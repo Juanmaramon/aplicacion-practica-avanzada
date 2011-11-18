@@ -59,7 +59,6 @@ class cCamera
 	  const cMatrix &GetProj() const { return mProj; }
 	  const cMatrix &GetViewProj() const { return mViewProj; }	
 
-
    private:
 
 	//La cámara se define a través de dos matrices: La matriz de vista (view) y la matriz de 

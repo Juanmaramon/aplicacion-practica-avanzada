@@ -39,13 +39,13 @@ void cPhysics::Init( ){
 	mpWorld->setGravity(btVector3(0,-10,0));
 
 	///create a few basic rigid bodies
-	btCollisionShape* lpGroundShape = new btBoxShape(btVector3(btScalar(10.),btScalar(10.),btScalar(10.)));
+/*	btCollisionShape* lpGroundShape = new btBoxShape(btVector3(btScalar(10.),btScalar(10.),btScalar(10.)));
 	mapCollisionShapes.push_back(lpGroundShape);
 	GetNewBody( lpGroundShape, 0.0f, cVec3( 0.0f, -10.0f, 0.0f ));
 	GetNewBody( lpGroundShape, 0.0f, cVec3( -20.0f, 0.0f, 0.0f ));
 	GetNewBody( lpGroundShape, 0.0f, cVec3( 20.0f, 0.0f, 0.0f ));
 	GetNewBody( lpGroundShape, 0.0f, cVec3( 0.0f, 0.0f, -20.0f ));
-	GetNewBody( lpGroundShape, 0.0f, cVec3( 0.0f, 0.0f, 20.0f ));
+	GetNewBody( lpGroundShape, 0.0f, cVec3( 0.0f, 0.0f, 20.0f ));	*/
 
 	// Draws debug info of bullet
 	cPhysicsDebugDraw::Get( ).setDebugMode( cPhysicsDebugDraw::DBG_DrawWireframe );

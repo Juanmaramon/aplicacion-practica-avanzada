@@ -263,6 +263,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Graphics\Frustum.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Graphics\GLHeaders.h"
 				>
 			</File>
@@ -663,6 +667,18 @@
 				</File>
 				<File
 					RelativePath=".\Gameplay\Object\Object.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Terrain"
+				>
+				<File
+					RelativePath=".\Gameplay\Terrain\Terrain.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Gameplay\Terrain\Terrain.h"
 					>
 				</File>
 			</Filter>

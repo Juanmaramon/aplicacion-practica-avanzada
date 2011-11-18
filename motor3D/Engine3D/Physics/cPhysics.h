@@ -17,6 +17,8 @@ public:
 	btCollisionShape* GetNewSphereShape( float lfRadius );
 	btCollisionShape* GetNewBoxShape( const cVec3& lHalfSize );
 	btRigidBody* GetNewBody( btCollisionShape* lpShape, float lfMass, const cVec3& lPosition );
+	// New for terrain generator
+	btAlignedObjectArray<btCollisionShape*>  getCollisionShapes(){ return mapCollisionShapes; }
 
 	// Static Methods to translate from and to Bullet Variable Types
 	static cVec3 Bullet2Local( const btVector3& lFrom );
