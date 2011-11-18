@@ -47,7 +47,7 @@ bool cGame::Init()
 			//m3DCamera.SetLookAt( cVec3(5.0f, 5.f, 5.f), cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );		
 
 			//Se aleja la cámara para ver bien la escena que vamos a cargar posteriormente.
-			m3DCamera.SetLookAt( cVec3(15.f, 15.f, 15.f),cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );
+			m3DCamera.SetLookAt( cVec3(30.f, 30.f, 30.f),cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );
 
 			//Se inicializa la clase cInputManager que representa el gestor de entrada (keyboard, gamepad, mouse, ...).
 			//Se le pasa la tabla "kaActionMapping" (de InputConfiguration.cpp) que indica la relación entre las acciones y los dispositivos.
@@ -56,6 +56,9 @@ bool cGame::Init()
 
 			// Initialization of physics object 
 			cPhysics::Get().Init();
+
+			// Terrain object
+			mTerrain.initialize();
 
 			//Se inicializa la clase que gestiona la texturas indicando que habrá 1, por ejemplo.
 			cTextureManager::Get().Init(10);
@@ -87,12 +90,12 @@ bool cGame::Init()
 			cMeshManager::Get().Init(5);
 
 			//Se inicializa el gestor de escenas.
-			cSceneManager::Get().Init(10);         
+			cSceneManager::Get().Init(10);   
 
 			//Se carga la escena.
 			//mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/dragonsmall.DAE" ); 		
-			//mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/duck_triangulate.dae" ); 
-			mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/plane.DAE" );
+			mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/duck_triangulate.dae" ); 
+			//mScene = cSceneManager::Get().LoadResource( "TestLevel", "./Data/Scene/plane.DAE" );
 
 			// Physics object in the game
 			cPhysicObject mModelObject = *((cPhysicObject*) ((cScene *)mScene.GetResource())->getSubObject( 0 ));
@@ -163,7 +166,7 @@ bool cGame::Init()
 
 //Función para actualizar el juego.
 void cGame::Update( float lfTimestep )
-{
+{ 			
 	//Se actualiza la ventana:
 	cWindow::Get().Update();
 
@@ -355,8 +358,11 @@ bool cGame::Deinit()
 
 	//Se libera la clase fuente.
 	mFont.Deinit();
+
     //Se libera el gestor de texturas.
 	cTextureManager::Get().Deinit();  
+	// Deinitialization of terrain
+	mTerrain.~Terrain();
 	// Deinitialization of physics object 
 	cPhysics::Get().Deinit();
 	//Se libera el InputManager:

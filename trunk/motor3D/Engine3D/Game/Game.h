@@ -9,6 +9,8 @@
 #include "..\Physics\cPhysics.h"
 #include "..\Physics\cPhysicObject.h"
 
+#include "..\Gameplay\Terrain\Terrain.h"
+
 //Clase que hace uso del Patrón Singleton definido en Singleton.h, para iniciar, actualizar, dibujar
 // y finalizar el juego
 class cGame : public cSingleton<cGame>
@@ -33,6 +35,9 @@ protected:
 		// Bullet physics object
 		//cPhysics mPhysics;
 	
+		// Terrain
+		Terrain mTerrain;
+
 public:
 	
 	//Función para inicializar el juego	
