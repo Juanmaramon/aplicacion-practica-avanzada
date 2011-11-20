@@ -136,12 +136,15 @@ void cSkeletalMesh::RenderMesh(){
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
 	glDrawRangeElements(GL_TRIANGLES,
 						0,
 						mpCoreModel->muiIndexCount,
 						mpCoreModel->muiIndexCount,
 						GL_UNSIGNED_INT,
 						NULL);
+
+
 	assert(glGetError() == GL_NO_ERROR);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
