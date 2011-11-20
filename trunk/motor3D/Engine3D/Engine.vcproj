@@ -674,11 +674,35 @@
 				Name="Terrain"
 				>
 				<File
+					RelativePath=".\Gameplay\Terrain\TargaImage.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Gameplay\Terrain\TargaImage.h"
+					>
+				</File>
+				<File
 					RelativePath=".\Gameplay\Terrain\Terrain.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\Gameplay\Terrain\Terrain.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Gameplay\Terrain\TerrainTexture.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Gameplay\Terrain\TerrainTexture.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Gameplay\Terrain\TerrainVBO.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Gameplay\Terrain\TerrainVBO.h"
 					>
 				</File>
 			</Filter>

@@ -58,7 +58,14 @@ bool cGame::Init()
 			cPhysics::Get().Init();
 
 			// Terrain object
-			mTerrain.initialize();
+			//mTerrain.initialize();
+
+			mTerrain.Init();
+			mTerrain.createHeightmap(Terrain::Midpoint);
+
+			mTerrainTexture.init(mTerrain.getHeightData());
+
+			mTerrainVBO.init(mTerrain.getHeightData());
 
 			//Se inicializa la clase que gestiona la texturas indicando que habrá 1, por ejemplo.
 			cTextureManager::Get().Init(10);
@@ -308,11 +315,16 @@ void cGame::Render()
 	// Render physic objects
 	for ( unsigned int luiIndex = 0; luiIndex < 10; ++luiIndex) {
 		maSphereObjects[luiIndex].Render();
-	}
+	}	
 	 
 	// 4) Renderizado de Geometría 3D con transparencia
 	// -------------------------------------------------------------
-	 
+	// Display the terrain mesh.
+	mTerrainTexture.enableTextures();
+	mTerrainVBO.draw(false);
+	mTerrainTexture.disableTextures();
+
+
 	// 5) Activación de Cámara 2D  
 	// -------------------------------------------------------------
 	cGraphicManager::Get().ActivateCamera( &m2DCamera );
@@ -362,7 +374,11 @@ bool cGame::Deinit()
     //Se libera el gestor de texturas.
 	cTextureManager::Get().Deinit();  
 	// Deinitialization of terrain
-	mTerrain.~Terrain();
+	//mTerrain.~Terrain();
+	mTerrain.Deinit();
+	mTerrainTexture.Deinit();
+	mTerrainVBO.Deinit();
+
 	// Deinitialization of physics object 
 	cPhysics::Get().Deinit();
 	//Se libera el InputManager:
