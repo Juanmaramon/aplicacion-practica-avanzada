@@ -1,0 +1,49 @@
+*****************************************************************
+*	APRON TUTORIALS PRESENTED BY MORROWLAND			*
+*****************************************************************
+*	Project Name		: Camera.4			*
+*	Project Description	: 3RD Person Camera		*
+*	Project Type		: OpenGL			*
+*	Author			: Ronny André Reierstad		*
+*	Web Page		: www.morrowland.com		*
+*	E-Mail			: apron@morrowland.com		*
+*	Version			: English (UK)			*
+*	Date			: 17.07.2002			*
+*****************************************************************
+
+
+It’s impossible for people to move around physically in a "virtual 3D world",
+we therefore use a "camera" to get orientated. When setting up a basic
+camera in OpenGL there are two main subjects to be taken into consideration,
+the camera handling and the perspective. 
+
+
+An OpenGL camera consists of three vectors: position, view and up.
+The "position", is the actual point where the camera is located,
+while the "view" is the target point that the camera is looking at.
+If you're standing in a room looking at a picture on the wall,
+then your eyes are the position and the picture is the view.
+You can say that the position point and the target point form a 
+view-vector.The "up" or "tilt" decides if the camera is tilting
+(used in flight simulators). 
+
+
+You can set up your "camera lens" in OpenGL by altering the perspective values. 
+The perspective of an OpenGL camera consists of four elements: fovy, aspect,
+near and far. "Fovy" specifies the field of view angle, in degrees,
+in the y-direction. "Aspect" specifies the aspect ratio that determines the
+field of view in the x-direction. The aspect ratio is the ratio of x (width)
+to y (height). "Near" specifies the distance from the viewer to the nearest
+clipping plane (always positive). "Far" specifies the disistance from the viewer
+to the far clipping plane (always positive). 
+
+There are many ways to create a camera, but since we always keep the
+character in our view, this is called a 3RD Person Camera. 
+
+Use the mouse and arrow keys or W A S D keys to move around. 
+
+-----------------------------------------------------------------
+Regards
+Ronny André Reierstad
+www.morrowland.com
+apron@morrowland.com
