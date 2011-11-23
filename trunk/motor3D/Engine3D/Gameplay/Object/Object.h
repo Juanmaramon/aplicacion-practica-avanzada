@@ -3,10 +3,13 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#define PIdiv180	0.0174529252
+
 #include <string>
 #include <vector>
 #include "..\..\MathLib\MathLib.h"
 #include "..\..\Utility\ResourceHandle.h"
+#include "..\..\Graphics\GLHeaders.h"
 
 class cObject
 {
@@ -22,6 +25,7 @@ class cObject
 		return mWorldMatrix; }
 		void AddMesh( cResourceHandle lMeshHandle,
 		cResourceHandle lMaterialHandle );
+
 	protected:
 		std::string macName;
 		cMatrix mWorldMatrix;

@@ -11,6 +11,7 @@ void cObject::Init()
 	mWorldMatrix.LoadIdentity();
 	mMeshHandles.resize(0);
 	mMaterialHandles.resize(0);
+
 }
 
 void cObject::AddMesh( cResourceHandle lMeshHandle, cResourceHandle lMaterialHandle ) 
@@ -39,7 +40,7 @@ void cObject::Render()
 			lpMesh->RenderMesh();
 			// Prepare the next pass
 			lbContinue = lpMaterial->SetNextPass();
-		}
+		}	
 	}
 }
 
@@ -50,4 +51,3 @@ void cObject::Update( float lfTimestep ){
 		lpMesh->Update(lfTimestep);
 	}
 }
-

@@ -48,16 +48,20 @@ class cCamera
 							float  lfZNear, float  lfZFar );
 
 	  //Funciones que devuelven información relativa a la orientación y posición de la cámara.
-	  cVec3 GetFront()       const   { mView.GetFront(); }
-	  cVec3 GetLeft()        const   { mView.GetLeft();  }
-	  cVec3 GetRight()       const   { mView.GetRight(); }
-	  cVec3 GetUp()          const   { mView.GetUp();    }
-	  cVec3 GetPosition()    const   { mView.GetPosition();    }
+	  cVec3 GetFront()       const   { return mView.GetFront(); }
+	  cVec3 GetLeft()        const   { return mView.GetLeft();  }
+	  cVec3 GetRight()       const   { return mView.GetRight(); }
+	  cVec3 GetUp()          const   { return mView.GetUp();    }
+	  cVec3 GetPosition()    const   { return mView.GetPosition();    }
  
 	  //Funciones que devuelven las matrices de esta clase (camera).
 	  const cMatrix &GetView() const { return mView; }
 	  const cMatrix &GetProj() const { return mProj; }
 	  const cMatrix &GetViewProj() const { return mViewProj; }	
+
+	  void SetView(cVec3 view){ mView.SetPosition(view); RefreshViewProj(); }
+
+	  //void MoveCamera(float speed);
 
    private:
 
