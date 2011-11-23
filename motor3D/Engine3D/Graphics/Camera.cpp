@@ -53,3 +53,13 @@ void cCamera::SetPerspective( float  lfFOVY_Rad, float  lfAspect,
    mProj.LoadPerpective(lfFOVY_Rad, lfAspect, lfZNear, lfZFar);
    RefreshViewProj();
 }
+
+/*void cCamera::MoveCamera(float speed){
+	tVector3 vVector = mView - mPos;	// Get the view vector
+	
+	// forward positive camera speed and backward negative camera speed.
+	mPos.x  = mPos.x  + vVector.x * speed;
+	mPos.z  = mPos.z  + vVector.z * speed;
+	mView.x = mView.x + vVector.x * speed;
+	mView.z = mView.z + vVector.z * speed;	
+}*/

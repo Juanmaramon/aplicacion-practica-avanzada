@@ -47,7 +47,8 @@ bool cGame::Init()
 			//m3DCamera.SetLookAt( cVec3(5.0f, 5.f, 5.f), cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );		
 
 			//Se aleja la cámara para ver bien la escena que vamos a cargar posteriormente.
-			m3DCamera.SetLookAt( cVec3(30.f, 30.f, 30.f),cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );
+			//m3DCamera.SetLookAt( cVec3(5.f, 4.3f, 5.f),cVec3(0.f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );
+			m3DCamera.SetLookAt( cVec3(0.f, 1.5f, 4.f),cVec3(0.f, 1.5f, 0.f), cVec3(0.0f, 1.f, 0.f) );
 
 			//Se inicializa la clase cInputManager que representa el gestor de entrada (keyboard, gamepad, mouse, ...).
 			//Se le pasa la tabla "kaActionMapping" (de InputConfiguration.cpp) que indica la relación entre las acciones y los dispositivos.
@@ -60,12 +61,12 @@ bool cGame::Init()
 			// Terrain object
 			//mTerrain.initialize();
 
-			mTerrain.Init();
+			/*mTerrain.Init();
 			mTerrain.createHeightmap(Terrain::Midpoint);
 
 			mTerrainTexture.init(mTerrain.getHeightData());
 
-			mTerrainVBO.init(mTerrain.getHeightData());
+			mTerrainVBO.init(mTerrain.getHeightData());*/
 
 			//Se inicializa la clase que gestiona la texturas indicando que habrá 1, por ejemplo.
 			cTextureManager::Get().Init(10);
@@ -142,21 +143,22 @@ bool cGame::Init()
 			cResourceHandle lMaterial = cMaterialManager::Get().LoadResource("Skeleton", "./Data/Material/SkeletonMaterial.xml");
 		
 			assert(lMaterial.IsValidHandle());
-			mObject.AddMesh(mSkeletalMesh, lMaterial);
+			mObject.AddMesh(mSkeletalMesh, lMaterial);	
 			cMatrix lMatrix;
 			lMatrix.LoadScale(0.01f);
-			mObject.SetWorldMatrix(lMatrix);
+			mObject.SetWorldMatrix(lMatrix);	
 
 			mBoxModel.InitBox( 0.0f, cVec3( 0.3f, 1.0f, 0.3f ) );
 			mObject.CreatePhysics( &mBoxModel );
 			lScaleMatrix.LoadScale(0.01f);
 			mObject.SetScaleMatrix( lScaleMatrix );
 
+			cMatrix lRotateMatrix;
 			lOffsetMatrix.LoadTranslation( cVec3( 0.0f, -1.0f, 0.0f ) );
-			mObject.SetDrawOffsetMatrix( lOffsetMatrix );
+			lRotateMatrix.LoadRotation( cVec3( 0.f, 1.f, 0.f ), 329.9f );
+			mObject.SetDrawOffsetMatrix( lOffsetMatrix * lRotateMatrix );
 			mObject.SetKinematic( );
-			mObject.SetPosition( cVec3( 1.0f, 1.0f, 0.0f ) );
-
+			mObject.SetPosition( cVec3( 0.0f, 0.0f, 0.0f ) );
 		}		
 		else
 		{
@@ -194,17 +196,35 @@ void cGame::Update( float lfTimestep )
 	bool lbmoveLeft = IsPressed( eIA_MoveLeft );
 	bool lbmoveRight = IsPressed( eIA_MoveRight );
 
+	cMatrix lOffsetMatrix, lRotateOffset, lTranslateOffset;
+	cVec3 lCamaraPos;
+	lOffsetMatrix.LoadIdentity();
+	lRotateOffset.LoadIdentity();
+	lTranslateOffset.LoadIdentity();
+	lCamaraPos = m3DCamera.GetPosition();
 
 	if ( lbmoveFront ) {
-		mObject.SetPosition( mObject.GetPosition( ) + cVec3(-0.1f, 0.0f, 0.0f ) );
+		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, -0.1f ) );
+		lCamaraPos.z += 0.1f;
+		m3DCamera.SetView(lCamaraPos);
 	}else if ( lbmoveBack  ) {
-		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.1f, 0.0f, 0.0f ) );
+		lCamaraPos.z -= 0.1f;
+		m3DCamera.SetView(lCamaraPos);
+		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, 0.1f ) );
 	}
 	if ( lbmoveLeft  ) {
-		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, 0.1f ) );
+
+		lOffsetMatrix.LoadRotation( cVec3( 0.f, 1.f, 0.f ), 0.01f );
+		 m3DCamera.SetView(lCamaraPos);
+		//lTranslateOffset.LoadTranslation(cVec3(-0.1f, 0.0f, 0.0f ));
+		//mObject.SetPosition( mObject.GetPosition( ) + cVec3(-0.1f, 0.0f, 0.0f ) );
+		
 	}else if ( lbmoveRight  ) {
-		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, -0.1f ) );
+		//lTranslateOffset.LoadTranslation(cVec3(0.1f, 0.0f, 0.0f ));
+		lOffsetMatrix.LoadRotation( cVec3( 0.f, 1.f, 0.f ), -0.01f );
+		//mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.1f, 0.0f, 0.0f ) );
 	}
+	mObject.SetDrawOffsetMatrix(mObject.GetDrawOffsetMatrix() * (lTranslateOffset * lOffsetMatrix));
 
 	// Update bullet physics object
 	cPhysics::Get().Update(lfTimestep);
@@ -320,9 +340,9 @@ void cGame::Render()
 	// 4) Renderizado de Geometría 3D con transparencia
 	// -------------------------------------------------------------
 	// Display the terrain mesh.
-	mTerrainTexture.enableTextures();
+	/*mTerrainTexture.enableTextures();
 	mTerrainVBO.draw(false);
-	mTerrainTexture.disableTextures();
+	mTerrainTexture.disableTextures();*/
 
 
 	// 5) Activación de Cámara 2D  
@@ -375,9 +395,9 @@ bool cGame::Deinit()
 	cTextureManager::Get().Deinit();  
 	// Deinitialization of terrain
 	//mTerrain.~Terrain();
-	mTerrain.Deinit();
+/*	mTerrain.Deinit();
 	mTerrainTexture.Deinit();
-	mTerrainVBO.Deinit();
+	mTerrainVBO.Deinit();*/
 
 	// Deinitialization of physics object 
 	cPhysics::Get().Deinit();
