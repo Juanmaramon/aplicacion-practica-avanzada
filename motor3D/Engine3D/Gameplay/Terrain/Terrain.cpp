@@ -1,868 +1,337 @@
+/*
+Bullet Continuous Collision Detection and Physics Library
+Copyright (c) 2003-2006,2008 Erwin Coumans  http://continuousphysics.com/Bullet/
+
+This software is provided 'as-is', without any express or implied warranty.
+In no event will the authors be held liable for any damages arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose, 
+including commercial applications, and to alter it and redistribute it freely, 
+subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+*/
+
 #include "Terrain.h"
+#include <Windows.h>
 
-//////////////////////////////////////////////////////////
-//	Function: "normalize"
-//
-//	First Modified:  07/22/2002
-//
-//	Input: None
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Normalizes the heights in the heightmap.
-//////////////////////////////////////////////////////////
-void Terrain::normalize(void)
+Terrain::Terrain(void)
+:
+/*	m_collisionConfiguration(NULL),
+	m_dispatcher(NULL),
+	m_overlappingPairCache(NULL),
+	m_constraintSolver(NULL),*/
+	m_upAxis(1),
+	m_type(PHY_FLOAT),
+	m_model(eRadial),
+	m_rawHeightfieldData(NULL)
+/*	m_phase(0.0),
+	m_isDynamic(true)		*/
 {
-	// Holds the max and min height in the heightmap.
-	float min = heights[0][0].y;
-	float max = heights[0][0].y;
+}
 
-	// Find the min and max heights in the heightmap.
-	for ( int y = 0; y < Height; y++)
-	{
-		for ( int x = 0; x < Width; x++)
+Terrain::~Terrain(void){
+	clearWorld();
+
+	//delete dynamics world
+/*	delete m_dynamicsWorld;
+
+	//delete solver
+	delete m_constraintSolver;
+
+	//delete broadphase
+	delete m_overlappingPairCache;
+
+	//delete dispatcher
+	delete m_dispatcher;
+
+	delete m_collisionConfiguration;				*/
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//	Terrain -- public class methods
+//
+////////////////////////////////////////////////////////////////////////////////
+
+static float convertToFloat(const byte_t * p, PHY_ScalarType type){
+	btAssert(p);
+
+	switch (type) {
+	case PHY_FLOAT:
 		{
-			if(heights[x][y].y < min)
-				min = heights[x][y].y;
-
-			if(heights[x][y].y > max)
-				max = heights[x][y].y;
+			float * pf = (float *) p;
+			return *pf;
 		}
+
+	case PHY_UCHAR:
+		{
+			unsigned char * pu = (unsigned char *) p;
+			return ((*pu) * s_gridHeightScale);
+		}
+
+	case PHY_SHORT:
+		{
+			short * ps = (short *) p;
+			return ((*ps) * s_gridHeightScale);
+		}
+
+	default:
+		btAssert(!"bad type");
 	}
 
+	return 0;
+}
 
-	// Normalize the heightmap.
-	for(int y = 0; y < Height; y++)
-	{
-		for( int x = 0; x < Width; x++)
+
+
+static void convertFromFloat(byte_t * p, float value, PHY_ScalarType type){
+	btAssert(p && "null");
+
+	switch (type) {
+	case PHY_FLOAT:
 		{
-			heights[x][y].y = (heights[x][y].y - min) / (max - min);
+			float * pf = (float *) p;
+			*pf = value;
 		}
+		break;
+
+	case PHY_UCHAR:
+		{
+			unsigned char * pu = (unsigned char *) p;
+			*pu = (unsigned char) (value / s_gridHeightScale);
+		}
+		break;
+
+	case PHY_SHORT:
+		{
+			short * ps = (short *) p;
+			*ps = (short) (value / s_gridHeightScale);
+		}
+		break;
+
+	default:
+		btAssert(!"bad type");
 	}
 }
 
-//////////////////////////////////////////////////////////
-//	Function: "scale"
-//
-//	First Modified: 07/24/2002
-//
-//	Input: int value		Scaling value.
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Scales the terrains height values.
-//////////////////////////////////////////////////////////
-void Terrain::scale(int value)
-{
-	for (int y = 0; y < Height; y++)
-	{
-		for (int x = 0; x < Width; x++)
-		{
-			heights[x][y].y = heights[x][y].y * value;
-		}
-	}
+static float getGridHeight(byte_t * grid, int i, int j, PHY_ScalarType type){
+	btAssert(grid);
+	btAssert(i >= 0 && i < s_gridSize);
+	btAssert(j >= 0 && j < s_gridSize);
+
+	int bpe = sizeof(float);
+	btAssert(bpe > 0 && "bad bytes per element");
+
+	int idx = (j * s_gridSize) + i;
+	long offset = ((long) bpe) * idx;
+
+	byte_t * p = grid + offset;
+
+	return convertToFloat(p, type);
 }
 
-//////////////////////////////////////////////////////////
-///	Function: "square"
-//
-///	FirstModified: 9/02/2005
-//
-///	\param int ulx			The upper left x value of this square.
-//		   int ulz			The upper left z value of this square.
-//		   int width		The width of this diamond.
-//		   int randValue	The random value to adjust the average height by.
-//
-///	Output: None
-//
-///	\return None
-//
-///	Purpose: The square step of the diamond square algorithm.
-//////////////////////////////////////////////////////////
-void Terrain::square(int ulx, int ulz, int width, int randValue)
-{
-	// Calculate the average of the four points width distance around or center point.
-	heights[ulx+(width/2)][ulz+(width/2)].y = (heights[ulx][ulz].y +
-											   heights[ulx][ulz+width].y +
-											   heights[ulx+width][ulz].y +
-											   heights[ulx+width][ulz+width].y) /
-											   4.0 + ((rand()%(randValue*2))-randValue);
-}
 
-//////////////////////////////////////////////////////////
-///	Function: "diamond"
-//
-///	FirstModified: 9/02/2005
-//
-///	\param int ulx			The upper left x value of this diamond.
-//		   int ulz			The upper left z value of this diamond.
-//		   int width		The width of this diamond.
-//		   int randValue	The random value to adjust the average height by.
-//
-///	Output: None
-//
-///	\return None
-//
-///	Purpose: The diamond step of the diamond square algorithm.
-//////////////////////////////////////////////////////////
-void Terrain::diamond(int ulx, int ulz, int width, int randValue)
-{
-	//////////////////
-	// Top of diamond
-	//////////////////
-	
-	// Check to make sure a height hasn't already been determined for this point.
-	if (heights[ulx + (width/2)][ulz].y <= 0.0001)
-	{
-		// Check to decide if all points around or diamond are within the heightmap.
-		if (ulz - (width/2) >= 0)
-		{
-			// Average the four points width/2 distance from our top point.
-			heights[ulx + (width/2)][ulz].y = (heights[ulx][ulz].y + 
-											   heights[ulx+width][ulz].y + 
-											   heights[ulx+(width/2)][ulz-(width/2)].y + 
-											   heights[ulx+(width/2)][ulz+(width/2)].y) / 
-											   4.0 + ((rand()%(randValue*2))-randValue);
-		}
-		else
-		{
-			// Average the three points width/2 distance from our top point.
-			heights[ulx + (width/2)][ulz].y = (heights[ulx][ulz].y + 
-											   heights[ulx+width][ulz].y +
-											   heights[ulx+(width/2)][ulz+(width/2)].y) /
-											   3.0 + ((rand()%(randValue*2))-randValue);
-		}
-	}
+// creates a radially-varying heightfield
+static void setRadial(byte_t * grid, int bytesPerElement, PHY_ScalarType type, float phase = 0.0){
+	btAssert(grid);
+	btAssert(bytesPerElement > 0);
 
-	//////////////////////
-	// Bottom of diamond
-	//////////////////////
+	// min/max
+	float period = 0.5 / s_gridSpacing;
+	float floor = 0.0;
+	float min_r = 3.0 * sqrt(s_gridSpacing);
+	float magnitude = 50.0 * sqrt(s_gridSpacing);
 
-	// Check to make sure a height hasn't already been determined for this point.
-	if (heights[ulx + (width/2)][ulz+width].y <= 0.0001)
-	{
-		// Check to decide if all points around or diamond are within the heightmap.
-		if (ulz+width+(width/2) <= Width-1)
-		{
-			// Average the four points width/2 distance from our bottom point.
-			heights[ulx + (width/2)][ulz+width].y = (heights[ulx][ulz+width].y + 
-													 heights[ulx+width][ulz+width].y +
-													 heights[ulx+(width/2)][ulz+(width/2)].y +
-													 heights[ulx+(width/2)][ulz+width+(width/2)].y) /
-													 4.0 + ((rand()%(randValue*2))-randValue);
-		}
-		else
-		{
-			// Average the three points width/2 distance from our bottom point.
-			heights[ulx + (width/2)][ulz+width].y = (heights[ulx][ulz+width].y + 
-													 heights[ulx+width][ulz+width].y +
-													 heights[ulx+(width/2)][ulz+(width/2)].y) /
-													 3.0 + ((rand()%(randValue*2))-randValue);
-		}
-	}
+	// pick a base_phase such that phase = 0 results in max height
+	//   (this way, if you create a heightfield with phase = 0,
+	//    you can rely on the min/max heights that result)
+	float base_phase = (0.5 * SIMD_PI) - (period * min_r);
+	phase += base_phase;
 
-	/////////////////////
-	// Left of diamond
-	/////////////////////
+	// center of grid
+	float cx = 0.5 * s_gridSize * s_gridSpacing;
+	float cy = cx;		// assume square grid
+	byte_t * p = grid;
+	for (int i = 0; i < s_gridSize; ++i) {
+		float x = i * s_gridSpacing;
+		for (int j = 0; j < s_gridSize; ++j) {
+			float y = j * s_gridSpacing;
 
-	// Check to make sure a height hasn't already been determined for this point.
-	if (heights[ulx][ulz + (width/2)].y <= 0.0001)
-	{
-		// Check to decide if all points around or diamond are within the heightmap.
-		if (ulx - (width/2) >= 0)
-		{
-			// Average the four points width/2 distance from our left point.
-			heights[ulx][ulz + (width/2)].y = (heights[ulx][ulz].y + 
-											   heights[ulx][ulz+width].y +
-											   heights[ulx+(width/2)][ulz+(width/2)].y +
-											   heights[ulx-(width/2)][ulz+(width/2)].y) /
-											   4.0 + ((rand()%(randValue*2))-randValue);
-		}
-		else
-		{
-			// Average the three points width/2 distance from our left point.
-			heights[ulx][ulz + (width/2)].y = (heights[ulx][ulz].y + 
-											   heights[ulx][ulz+width].y +
-											   heights[ulx+(width/2)][ulz+(width/2)].y) /
-											   3.0 + ((rand()%(randValue*2))-randValue);
-		}
-	}
+			float dx = x - cx;
+			float dy = y - cy;
 
-	/////////////////////
-	// Right of diamond
-	/////////////////////
+			float r = sqrt((dx * dx) + (dy * dy));
 
-	// Check to make sure a height hasn't already been determined for this point.
-	if (heights[ulx+width][ulz + (width/2)].y <= 0.0001)
-	{
-		// Check to decide if all points around or diamond are within the heightmap.
-		if (ulx+width + (width/2) <= Width-1)
-		{
-			// Average the four points width/2 distance from our right point.
-			heights[ulx+width][ulz + (width/2)].y = (heights[ulx+width][ulz].y + 
-													 heights[ulx+width][ulz+width].y +
-													 heights[ulx+width+(width/2)][ulz+(width/2)].y +
-													 heights[ulx+width-(width/2)][ulz+(width/2)].y) /
-													 4.0 + ((rand()%(randValue*2))-randValue);
-		}
-		else
-		{
-			// Average the three points width/2 distance from our right point.
-			heights[ulx+width][ulz + (width/2)].y = (heights[ulx+width][ulz].y + 
-													 heights[ulx+width][ulz+width].y +
-													 heights[ulx+width-(width/2)][ulz+(width/2)].y) /
-													 3.0 + ((rand()%(randValue*2))-randValue);
-		}
-	}
-}
-
-//////////////////////////////////////////////////////////
-//	Function: "flaten"
-//
-//	First Modified: 07/22/2002
-//
-//	Input: None
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Flatens the heightmap slightly by squaring the
-//			 normalized height values.
-//////////////////////////////////////////////////////////
-void Terrain::flaten(void)
-{
-	// Flaten the heightmap.
-	for (int y = 0; y < Height; y++)
-	{
-		for (int x = 0; x < Width; x++)
-		{
-			// Square the normalized height value.
-			heights[x][y].y = heights[x][y].y * heights[x][y].y;
-		}
-	}
-}
-
-//////////////////////////////////////////////////////////
-//	Function: "smooth"
-//
-//	First Modified: 07/23/2002
-//
-//	Input: None
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Smooths the terrain by averaging near heights.
-//////////////////////////////////////////////////////////
-void Terrain::smooth(void)
-{
-	// The median of a point and it's surounding points.
-	float median;
-
-	// Smooth a point by averaging the points around it.
-	for (int y = 0; y < Width; y++){
-		for (int x = 0; x < Height; x++){
-			int num_div = 1;
-			median = heights[x][y].y;
-			if (x > 0)
-			{
-				median += heights[x-1][y].y;
-				num_div++;
+			float z = period;
+			if (r < min_r) {
+				r = min_r;
 			}
-			else
-			{
-				median += heights[Width-1][y].y;
-				num_div++;
+			z = (1.0 / r) * sin(period * r + phase);
+			if (z > period) {
+				z = period;
+			} else if (z < -period) {
+				z = -period;
 			}
-			if (x < Width - 1)
-			{
-				median += heights[x+1][y].y;
-				num_div++;
-			}
-			else
-			{
-				median += heights[0][y].y;
-				num_div++;
-			}
-			if (y > 0)
-			{
-				median += heights[x][y-1].y;
-				num_div++;
-			}
-			else
-			{
-				median += heights[x][Height-1].y;
-				num_div++;
-			}
-			if (y < Height - 1)
-			{
-				median += heights[x][y+1].y;
-				num_div++;
-			}
-			else
-			{
-				median += heights[x][0].y;
-				num_div++;
-			}
+			z = floor + magnitude * z;
 
-			median = median / num_div;
-			heights[x][y].y = median;
+			convertFromFloat(p, z, type);
+			p += bytesPerElement;
 		}
 	}
 }
 
-//////////////////////////////////////////////////////////
-//	Function: "addHill"
-//
-//	First Modified: 07/22/2002
-//
-//	Input: None
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Raises a hill on the heightmap.
-//////////////////////////////////////////////////////////
-void Terrain::addHill(void)
-{
+static void dumpGrid(const byte_t * grid,int bytesPerElement,PHY_ScalarType type,int max){
+	//std::cerr << "Grid:\n";
 
-	// Get a random radius between radmin and radmax.
-	int radius = rand()%(radmax - radmin + 1) + radmin;
+	char buffer[32];
 
-
-	// Get a random x and y for the center point.
-	int randX = (rand()%(Width +(radius*2))) -radius;
-	int randY = (rand()%(Height+(radius*2))) -radius;
-
-
-	// radius squared.
-	int rad_sqr = radius * radius;
-
-
-	// We can speed up building the hill by creating a bounding box around the
-	// hill and just looping through those variables.  Also, our center point
-	// can be outside of the heightmap itself, so this will keep us from going
-	// outside of the bounds of the heightmap.
-	int startX = randX - radius;
-	if( startX < 0 )
-		startX = 0;
-
-	int endX = randX + radius;
-	if( endX > Width)
-		endX = Width;
-
-
-	int startY = randY - radius;
-	if( startY < 0 )
-		startY = 0;
-
-	int endY = randY + radius;
-	if( endY > Height)
-		endY = Height;
-
-
-	// Loop through the values inside the bounding box and raise our hill.
-	int xside, yside;
-	for (int y = startY; y < endY; y++)
-	{
-		for ( int x = startX; x < endX; x++)
-		{
-			xside = randX - x;
-			xside = xside * xside;
-			yside = randY - y;
-			yside = yside * yside;
-
-			if (heights[x][y].y < ((rad_sqr) - (xside + yside)))
-				heights[x][y].y = heights[x][y].y + float(sqrt((double)(rad_sqr - (xside + yside))));
+	for (int j = 0; j < max; ++j) {
+		for (int i = 0; i < max; ++i) {
+			long offset = j * s_gridSize + i;
+			float z = convertToFloat(grid + offset * bytesPerElement, type);
+			sprintf(buffer, "%6.2f", z);
+			//std::cerr << "  " << buffer;
 		}
+		//std::cerr << "\n";
 	}
 }
 
-//////////////////////////////////////////////////////////
-///	Function: "createHeightmap"
-//
-///	FirstModified: 9/02/2005
-//
-///	\param int type			The method to use when creating the heightmap.
-//
-///	Output: None
-//
-///	\return None
-//
-///	Purpose: Creates a heightmap using the given method.
-//////////////////////////////////////////////////////////
-void Terrain::createHeightmap(int type)
-{
-	// Create the heightmap using the given method.
-	if (type == Terrain::FaultLine)
-		createHeightmapFaultLine();
-	else if (type == Terrain::Midpoint)
-		createHeightmapMidpoint();
-	else
-		createHeightmapHill();
+static byte_t * getRawHeightfieldData(eTerrainModel model, PHY_ScalarType type, btScalar& minHeight, btScalar& maxHeight){
+//	std::cerr << "\nRegenerating terrain\n";
+//	std::cerr << "  model = " << model << "\n";
+//	std::cerr << "  type = " << type << "\n";
 
-	// Create the texture to display.
-	createImage();
-}
+	long nElements = ((long) s_gridSize) * s_gridSize;
+//	std::cerr << "  nElements = " << nElements << "\n";
 
-//////////////////////////////////////////////////////////
-///	Function: "createImage"
-//
-///	FirstModified: 9/02/2005
-//
-///	\param None
-//
-///	Output: None
-//
-///	\return None
-//
-///	Purpose: Creates a texture from the current heightmap.
-//////////////////////////////////////////////////////////
-void Terrain::createImage(void)
-{
-	// Create an array to hold the texture data.
-	GLubyte *heightmap;
-	heightmap = new GLubyte[(Width-1)*(Height-1)];
+	int bytesPerElement = sizeof(float);
+//	std::cerr << "  bytesPerElement = " << bytesPerElement << "\n";
+	btAssert(bytesPerElement > 0 && "bad bytes per element");
 
-	// Normalize the heightmap so we can keep the values between 0 and 255.
-	normalize();
+	long nBytes = nElements * bytesPerElement;
+//	std::cerr << "  nBytes = " << nBytes << "\n";
+	byte_t * raw = new byte_t[nBytes];
+	btAssert(raw && "out of memory");
 
-	// Fill in our GLubyte array.
-	for (int y = 0; y < Height-1; y++)
-	{		
-		for (int x = 0; x < Width-1; x++)
-		{
-			heightmap[(y*(Width-1))+x] = heights[x][y].y * 255;								 												
-		}
+	// reseed randomization every 30 seconds
+//	srand(time(NULL) / 30);
+
+	// populate based on model
+	setRadial(raw, bytesPerElement, type);
+
+	if (0) {
+		// inside if(0) so it keeps compiling but isn't
+		// 	exercised and doesn't cause warnings
+//		std::cerr << "final grid:\n";
+		dumpGrid(raw, bytesPerElement, type, s_gridSize - 1);
 	}
 
+	// find min/max
+	for (int i = 0; i < s_gridSize; ++i) {
+		for (int j = 0; j < s_gridSize; ++j) {
+			float z = getGridHeight(raw, i, j, type);
+//			std::cerr << "i=" << i << ", j=" << j << ": z=" << z << "\n";
 
-	// Create our texture object.
-	if (heightmapTexture > 0)
-		glDeleteTextures(1, &heightmapTexture);
-	glGenTextures(1, &heightmapTexture);
-
-	glBindTexture(GL_TEXTURE_2D, heightmapTexture);
-
-	// Fill in out texture with our GLubyte array.
-	glTexImage2D(GL_TEXTURE_2D, 0,  1, 
-									Width-1, 
-									Height-1,
-									0,
-									GL_LUMINANCE,
-									GL_UNSIGNED_BYTE,
-									heightmap);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Set up the wrap.
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-	// Free our GLubyte array.
-	delete [] heightmap;
-}
-
-//////////////////////////////////////////////////////////
-//	Function: "createHeightmapFaultLine"
-//
-//	First Modified: 07/23/2002
-//
-//	Input: int seed		The random number generator seed.
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Creates a heightmap using the fault line algorithm.
-//////////////////////////////////////////////////////////
-void Terrain::createHeightmapFaultLine(int seed)
-{
-	// Allocate array for heightmap.
-	if (heights == NULL)
-	{
-		heights = new heightData*[Width];
-		for (int i = 0; i < Width; i++)
-		{
-			heights[i] = new heightData[Height];
-		}
-	}
-
-	// Init the heightmap.
-	for (int i = 0; i < Height; i++)
-	{
-		for (int j = 0; j < Width; j++)
-		{
-			heights[j][i].y = 0;
-		}
-	}
-
-	// Seed the random number generator.
-	srand(seed);
-
-	// Create a random line and raise or lower points on either side of it.
-	int x1, x2, z1, z2;
-	for (int i = 0; i < 500; i++)
-	{
-		// Create a random line.
-		x1 = rand() % Width;
-		x2 = rand() % Width;
-		z1 = rand() % Height;
-		z2 = rand() % Height;
-
-		// Loop through the points in the heightmap.
-		for (int z = 0; z < Height; z++)
-		{
-			for (int x = 0; x < Width; x++)
-			{
-				// Raise the height if the current point is on one side of the
-				// line, otherwise lower the height.
-				if (((x2-x1) * (z-z1)) - ((z2-z1) * (x-x1)) > 0)
-					heights[x][z].y += 1;
-				else
-					heights[x][z].y -= 1;
-			}
-		}
-	}
-
-	// Smooth the result.
-	for (int i = 0; i < 80; i++)
-	{
-		smooth();
-	}
-
-	// Normalize and flaten the heightmap.
-	normalize();
-	flaten();
-	scale(128);
-}
-
-//////////////////////////////////////////////////////////
-//	Function: "createHeightmapMidpoint"
-//
-///	FirstModified: 9/02/2005
-//
-//	Input: int seed		The random number generator seed.
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Creates a heightmap using midpoint displacement.
-//////////////////////////////////////////////////////////
-void Terrain::createHeightmapMidpoint(int seed)
-{
-	// Allocate array for heightmap.
-	if (heights == NULL)
-	{
-		heights = new heightData*[Width];
-		for (int i = 0; i < Width; i++)
-		{
-			heights[i] = new heightData[Height];
-		}
-	}
-
-	// Init the heightmap.
-	for (int i = 0; i < Height; i++)
-	{
-		for (int j = 0; j < Width; j++)
-		{
-			heights[j][i].y = 0;
-		}
-	}
-
-	// Seed the random number generator.
-	srand(seed);
-
-	// Set the corners to random heights.
-	heights[0][0].y = rand() % Width;
-	heights[Width-1][0].y = rand() % Width;
-	heights[0][Height-1].y = rand() % Width;
-	heights[Width-1][Height-1].y = rand() % Width;
-
-	// Calculate the center point.
-	heights[(Width-1)/2][(Width-1)/2].y = (heights[0][0].y +
-											   heights[0][Height-1].y +
-											   heights[Width-1][0].y +
-											   heights[Width-1][Height-1].y) /
-											   4.0 + (rand()%Width);
-
-	
-
-	// We want to loop through our diamond and square functions untill all
-	// heights have a value.  This will be acomplished when the width of the
-	// diamond/square step is less than 2, leaving no space for new points.
-	for (int width = (Width-1)/2; width >= 2; width /= 2)
-	{
-	
-		// For each iteration of the above for loop, we will need to do an
-		// iteration of the square and diamond steps for each width across
-		// and down the heightmap.
-		for (int x = 0; x < Width-1; x+= width)
-		{
-			for (int y = 0; y < Width-1; y+= width)
-			{
-				square(x, y, width, width);
-			}
-		}
-
-		for (int x = 0; x < Width-1; x+= width)
-		{
-			for (int y = 0; y < Width-1; y+= width)
-			{
-				diamond(x, y, width, width);
-			}
-		}
-	}
-
-	// Smooth the result.
-	for (int i = 0; i < 20; i++){
-		smooth();
-	}
-
-	// Normalize and flaten the heightmap.
-	normalize();
-	flaten();
-	scale(128);
-
-	// Create normals.
-	createNormals();
-}
-
-//////////////////////////////////////////////////////////
-//	Function: "createHeightmapHill"
-//
-///	FirstModified: 9/02/2005
-//
-//	Input: int rmin		Minimum radius.
-//		   int rmax		Maximum radius.
-//		   int seed		The random number generator seed.
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Creates a heightmap using the hill algorithm.
-//////////////////////////////////////////////////////////
-void Terrain::createHeightmapHill(int rmin, int rmax, int seed)
-{
-	// Set the values.
-	radmin = rmin;
-	radmax = rmax;
-	rand_seed = seed;
-
-	// Allocate array for heightmap.
-	if (heights == NULL)
-	{
-		heights = new heightData*[Width];
-		for (int i = 0; i < Width; i++)
-		{
-			heights[i] = new heightData[Height];
-		}
-	}
-
-	// Init the heightmap.
-	for (int i = 0; i < Height; i++)
-	{
-		for (int j = 0; j < Width; j++)
-		{
-			heights[j][i].y = 0;
-		}
-	}
-
-
-	// Seed the random number generator.
-	srand(rand_seed);
-
-
-	// Add the hills.
-	for (int i = 0; i < 3000; i++)
-	{
-		addHill();
-	}
-
-	// Smooth the terrain.
-	for (int i = 0; i < 40; i++)
-	{
-		smooth();
-	}
-
-
-	// Normalize and flaten the heightmap.
-	normalize();
-	flaten();
-	scale(128);
-
-
-}
-
-//////////////////////////////////////////////////////////
-//	Function: "createNormals"
-//
-//	First Modified: 07/22/2002
-//
-//	Input: None
-//
-//	Output: None
-//
-//	Returns: None
-//
-//	Purpose: Creates vertex normals for the heights in the heightmap.
-//////////////////////////////////////////////////////////
-void Terrain::createNormals(void)
-{
-	cVec3 v1, v2, n, ntmp;
-	float length;
-
-
-	// Loop through all points and create a normal.
-	for (int y = 0; y < Height; y++)
-	{
-		for (int x = 0; x < Width; x++)
-		{
-			// Initialize the vectors.
-			n.x    = n.y    = n.z    = 0.0f;
-			v1.x   = v1.y   = v1.z   = 0.0f;		
-			v2.x   = v2.y   = v2.z   = 0.0f;
-			ntmp.x = ntmp.y = ntmp.z = 0.0f;
-			length = 0.0f;
-
-			// Add the normals from the faces around our point.
-			if (x > 0)
-			{
-				if (y > 0)
-				{
-					v1.x =  0; v1.z = -1; v1.y = heights[x][y-1].y - heights[x][y].y;
-					v2.x = -1; v2.z =  0; v2.y = heights[x-1][y].y   - heights[x][y].y;
-					ntmp.x = v1.y * v2.z - v1.z * v2.y;
-					ntmp.y = v1.z * v2.x - v1.x * v2.z;
-					ntmp.z = v1.x * v2.y - v1.y * v2.x;
-
-					n.x += ntmp.x; n.y += ntmp.y; n.z += ntmp.z;
+			// update min/max
+			if (!i && !j) {
+				minHeight = z;
+				maxHeight = z;
+			} else {
+				if (z < minHeight) {
+					minHeight = z;
 				}
-
-				if (y < Height - 1)
-				{
-					v1.x = -1; v1.z =  0; v1.y = heights[x-1][y].y   - heights[x][y].y;
-					v2.x = -1; v2.z =  1; v2.y = heights[x-1][y+1].y - heights[x][y].y;
-					ntmp.x = v1.y * v2.z - v1.z * v2.y;
-					ntmp.y = v1.z * v2.x - v1.x * v2.z;
-					ntmp.z = v1.x * v2.y - v1.y * v2.x;
-
-					n.x += ntmp.x; n.y += ntmp.y; n.z += ntmp.z;
-
-					v1.x = -1; v1.z =  1; v1.y = heights[x-1][y+1].y - heights[x][y].y;
-					v2.x =  0; v2.z =  1; v2.y = heights[x][y+1].y - heights[x][y].y;
-					ntmp.x = v1.y * v2.z - v1.z * v2.y;
-					ntmp.y = v1.z * v2.x - v1.x * v2.z;
-					ntmp.z = v1.x * v2.y - v1.y * v2.x;
-
-					n.x += ntmp.x; n.y += ntmp.y; n.z += ntmp.z;
+				if (z > maxHeight) {
+					maxHeight = z;
 				}
 			}
-
-			if (x < Width - 1)
-			{
-				if (y < Height - 1)
-				{
-					v1.x =  0; v1.z =  1; v1.y = heights[x][y+1].y - heights[x][y].y;
-					v2.x =  1; v2.z =  0; v2.y = heights[x+1][y].y   - heights[x][y].y;
-					ntmp.x = v1.y * v2.z - v1.z * v2.y;
-					ntmp.y = v1.z * v2.x - v1.x * v2.z;
-					ntmp.z = v1.x * v2.y - v1.y * v2.x;
-
-					n.x += ntmp.x; n.y += ntmp.y; n.z += ntmp.z;
-				}
-
-				if (y > 0)
-				{
-					v1.x =  1; v1.z =  0; v1.y = heights[x+1][y].y   - heights[x][y].y;
-					v2.x =  1; v2.z = -1; v2.y = heights[x+1][y-1].y - heights[x][y].y;
-					ntmp.x = v1.y * v2.z - v1.z * v2.y;
-					ntmp.y = v1.z * v2.x - v1.x * v2.z;
-					ntmp.z = v1.x * v2.y - v1.y * v2.x;
-
-					n.x += ntmp.x; n.y += ntmp.y; n.z += ntmp.z;
-
-					v1.x =  1; v1.z = -1; v1.y = heights[x+1][y-1].y - heights[x][y].y;
-					v2.x =  0; v2.z = -1; v2.y = heights[x][y-1].y - heights[x][y].y;
-					ntmp.x = v1.y * v2.z - v1.z * v2.y;
-					ntmp.y = v1.z * v2.x - v1.x * v2.z;
-					ntmp.z = v1.x * v2.y - v1.y * v2.x;
-
-					n.x += ntmp.x; n.y += ntmp.y; n.z += ntmp.z;
-				}
-			}
-			
-			// Find the length of this vector.
-			length = (float)sqrt((n.x * n.x) + (n.y * n.y) + (n.z * n.z));
-
-			// Normalize this vector.
-			n.x = n.x / length;
-			n.y = n.y / length;
-			n.z = n.z / length;
-
-			// Set our normalized vector as this points normal.
-			heights[x][y].normal.x = n.x;
-			heights[x][y].normal.y = n.y;
-			heights[x][y].normal.z = n.z;
 		}
 	}
+
+	if (maxHeight < -minHeight) {
+		maxHeight = -minHeight;
+	}
+	if (minHeight > -maxHeight) {
+		minHeight = -maxHeight;
+	}
+
+//	std::cerr << "  minHeight = " << minHeight << "\n";
+//	std::cerr << "  maxHeight = " << maxHeight << "\n";
+
+	return raw;
 }
 
-//////////////////////////////////////////////////////////
-///	Function: "draw"
-//
-///	FirstModified: 9/02/2005
-//
-///	\param int sWidth			The current screen width.
-//		   int sHeight			The current screen height.
-//
-///	Output: None
-//
-///	\return None
-//
-///	Purpose: Display the heightmap as a 2d black and white image.
-//////////////////////////////////////////////////////////
-void Terrain::draw(int sWidth, int sHeight)
+static btVector3 getUpVector(int upAxis, btScalar regularValue, btScalar upValue){
+	btAssert(upAxis >= 0 && upAxis <= 2 && "bad up axis");
+
+	btVector3 v(regularValue, regularValue, regularValue);
+	v[upAxis] = upValue;
+
+	return v;
+}
+
+
+/// one-time class and physics initialization
+void Terrain::initialize(void)
 {
-	// Set up ortho mode.
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//glOrtho(0.0f, sWidth, sHeight, 0.0f, 1.0f, -1.0f);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();	
+//	std::cerr << "initializing...\n";
 
-	// Bind our heightmap image.
-	glBindTexture(GL_TEXTURE_2D, heightmapTexture);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	/* This code is inside cPhysics class */
 
+	// set up basic state
+/*	m_upAxis = 1;		// start with Y-axis as "up"
+	m_type = PHY_FLOAT;
+	m_model = eRadial;//eFractal;
+	m_isDynamic = true;
 
-	// Display the texture.
-	glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2f(0, 0);
-		glVertex2f(0, 0);
+	// set up the physics world
+	m_collisionConfiguration = new btDefaultCollisionConfiguration();
+	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
+	btVector3 worldMin(-1000,-1000,-1000);
+	btVector3 worldMax(1000,1000,1000);
+	m_overlappingPairCache = new btAxisSweep3(worldMin,worldMax);
+	m_constraintSolver = new btSequentialImpulseConstraintSolver();
+	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher,m_overlappingPairCache,m_constraintSolver,m_collisionConfiguration);
 
-		glTexCoord2f(0, 1);			
-		glVertex2f(0, sHeight);
+	// initialize axis- or type-dependent physics from here
+	this->resetPhysics();	*/
 
-		glTexCoord2f(1, 0);
-		glVertex2f(sWidth, 0);
+	clearWorld();
 
-		glTexCoord2f(1, 1);
-		glVertex2f(sWidth, sHeight);	
-	glEnd();
+	// get new heightfield of appropriate type
+	m_rawHeightfieldData = getRawHeightfieldData(eRadial, PHY_FLOAT, m_minHeight, m_maxHeight);
 
+	bool flipQuadEdges = false;													// width, height, *heightmapData, scale, minHeight, maxHeight, upAxis, heightMapDatatype, flipQuadEdges 
+	btHeightfieldTerrainShape * heightfieldShape = new btHeightfieldTerrainShape(s_gridSize, s_gridSize, m_rawHeightfieldData, s_gridHeightScale, m_minHeight, m_maxHeight, m_upAxis, PHY_FLOAT, flipQuadEdges);
+	assert(heightfieldShape);
 
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//gluPerspective(45.0f, sWidth/sHeight, 1.0f, 1000.0f);
+	// scale the shape
+	btVector3 localScaling = getUpVector(m_upAxis, s_gridSpacing, 1.0);
+	heightfieldShape->setLocalScaling(localScaling);
+
+	// stash this shape away
+	cPhysics::Get().getCollisionShapes().push_back(heightfieldShape);
+	//m_collisionShapes.push_back(heightfieldShape);
+
+	// set origin to middle of heightfield
+	btTransform tr;
+	tr.setIdentity();
+	tr.setOrigin(btVector3(0,-20,0));
+
+	// create ground object
+	float mass = 0.0;
+	//localCreateRigidBody(mass, tr, heightfieldShape);
+
+   //We can also use DemoApplication::localCreateRigidBody, but for clarity it is provided here:
+   
+	btRigidBody* body = cPhysics::Get().GetNewBody(heightfieldShape, mass, cVec3(0, -20, 0));
+}
+
+/// removes all objects and shapes from the world
+void Terrain::clearWorld(void)
+{
+	// delete raw heightfield data
+	delete m_rawHeightfieldData;
+	m_rawHeightfieldData = NULL;
 }

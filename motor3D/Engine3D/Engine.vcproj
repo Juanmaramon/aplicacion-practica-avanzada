@@ -674,11 +674,11 @@
 				Name="Terrain"
 				>
 				<File
-					RelativePath=".\Gameplay\Terrain\TargaImage.cpp"
+					RelativePath=".\Gameplay\Terrain\Heightmap.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\Gameplay\Terrain\TargaImage.h"
+					RelativePath=".\Gameplay\Terrain\Heightmap.h"
 					>
 				</File>
 				<File
@@ -689,22 +689,10 @@
 					RelativePath=".\Gameplay\Terrain\Terrain.h"
 					>
 				</File>
-				<File
-					RelativePath=".\Gameplay\Terrain\TerrainTexture.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Gameplay\Terrain\TerrainTexture.h"
-					>
-				</File>
-				<File
-					RelativePath=".\Gameplay\Terrain\TerrainVBO.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Gameplay\Terrain\TerrainVBO.h"
-					>
-				</File>
+			</Filter>
+			<Filter
+				Name="Character"
+				>
 			</Filter>
 		</Filter>
 		<Filter

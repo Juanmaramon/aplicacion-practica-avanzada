@@ -77,7 +77,7 @@ void cSkeletalMesh::RenderSkeleton(void){
 	for (int liIndex = 0; liIndex < liBones; ++liIndex){
 		cVec3 lvP1(mafLines[liIndex][0],mafLines[liIndex][1],mafLines[liIndex][2]);
 		cVec3 lvP2(mafLines[liIndex][3],mafLines[liIndex][4],mafLines[liIndex][5]);
-		cGraphicManager::Get().DrawLine( lvP1, lvP2, cVec3(1.0f, 1.0f, 1.0f));
+		//cGraphicManager::Get().DrawLine( lvP1, lvP2, cVec3(1.0f, 1.0f, 1.0f));
 	}
 
 	// Restore the world matrix
