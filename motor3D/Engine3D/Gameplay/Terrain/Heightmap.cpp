@@ -86,42 +86,41 @@ static btVector3 getUpVector(int upAxis, btScalar regularValue, btScalar upValue
 
 bool Heightmap::Load(){
 	//Raw file
-	if(!LoadRawFile			("./Data/Scene/images/terrain.raw", MAP_SIZE*MAP_SIZE))	return false;
+	if(!LoadRawFile			("./Data/Scene/images/terrain1.raw", MAP_SIZE*MAP_SIZE))	return false;
 	
 	//Texture 1
-	//if(!tex_floor.Load		("terrain.gif",GL_REPEAT,GL_REPEAT,true))	return false;
 	tex_floor = cTextureManager::Get().LoadResource("terrain", "./Data/Scene/images/sand.tga"); 
 	assert(tex_floor.IsValidHandle());
 	
 	//Texture 2
-	//if(!tex_detail.Load		("detail.gif",GL_REPEAT,GL_REPEAT,true))	return false;
 	tex_detail = cTextureManager::Get().LoadResource("detail", "./Data/Scene/images/mid1.tga");	
 	assert(tex_detail.IsValidHandle());
 	
 	//Texture 3
-	//if(!tex_water.Load		("water.jpg",GL_REPEAT,GL_REPEAT,true))		return false;
-	tex_water = cTextureManager::Get().LoadResource("water", "./Data/Scene/images/water.jpg");
-	assert(tex_water.IsValidHandle());
+//	tex_water = cTextureManager::Get().LoadResource("water", "./Data/Scene/images/water.jpg");
+//	assert(tex_water.IsValidHandle());
 	//move = 0.0f;
-	
-	//Texture
-	//if(!tex_waterfall.Load	("waterfall.jpg",GL_REPEAT,GL_REPEAT,true)) return false;
-	//move_waterfall = 0.0f;
 	
 	btScalar minHeight, maxHeight;
 
 	//Create display list
 	Create(minHeight, maxHeight);
 
+/*	for (int i = 0; i <= BULLET_MAP_SIZE; i++ ){
+		for (int j = 0; j <= BULLET_MAP_SIZE; j++ ){
+			smallHeightMap[ i + (j * BULLET_MAP_SIZE) ] = Height( i, j );
+		}
+	}*/
+
 	// Creates physics over the terrain data
-	bool flipQuadEdges = false;													// width, height, *heightmapData, scale, minHeight, maxHeight, upAxis, heightMapDatatype, flipQuadEdges s
+	bool flipQuadEdges = false;													// width, height, *heightmapData, scale, minHeight, maxHeight, upAxis, heightMapDatatype, flipQuadEdges 
 	int upAxis = 1;
 	//btHeightfieldTerrainShape * heightfieldShape = new btHeightfieldTerrainShape(MAP_SIZE, MAP_SIZE, HeightMap, s_gridHeightScale1, minHeight, maxHeight, upAxis, PHY_UCHAR, flipQuadEdges);
-	btHeightfieldTerrainShape * heightfieldShape = new btHeightfieldTerrainShape(65, 65, HeightMap, s_gridHeightScale1, minHeight, maxHeight, upAxis, PHY_UCHAR, flipQuadEdges);
+	btHeightfieldTerrainShape * heightfieldShape = new btHeightfieldTerrainShape(BULLET_MAP_SIZE, BULLET_MAP_SIZE, HeightMap /*smallHeightMap*/, s_gridHeightScale1, minHeight, maxHeight, upAxis, PHY_UCHAR, flipQuadEdges);
 	assert(heightfieldShape);
 
 	// scale the shape
-	btVector3 localScaling = getUpVector(upAxis, s_gridSpacing1, 1.0);
+//	btVector3 localScaling = getUpVector(upAxis, s_gridSpacing1, 1.0);
 //	heightfieldShape->setLocalScaling(localScaling);
 
 	// stash this shape away
@@ -130,11 +129,8 @@ bool Heightmap::Load(){
 
 	// create ground object
 	float mass = 0.0;
-	//localCreateRigidBody(mass, tr, heightfieldShape);
-
-   //We can also use DemoApplication::localCreateRigidBody, but for clarity it is provided here:
    
-	btRigidBody* body = cPhysics::Get().GetNewBody(heightfieldShape, mass, cVec3(0, -20, 0));	
+	btRigidBody* body = cPhysics::Get().GetNewBody(heightfieldShape, mass, cVec3(0, -100, 0));	
 
 	return true;
 }
@@ -152,6 +148,8 @@ void Heightmap::Create(btScalar& minHeight, btScalar& maxHeight){
 	disp_list_id = glGenLists(1);
 	glNewList(disp_list_id, GL_COMPILE);
 
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	// Bind the terrain texture to our terrain
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	glEnable(GL_TEXTURE_2D);
@@ -162,8 +160,6 @@ void Heightmap::Create(btScalar& minHeight, btScalar& maxHeight){
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-	//glBindTexture(GL_TEXTURE_2D, tex_floor.GetID());
 
 	if (detail){
 		// Activate the second texture ID and bind the fog texture to it
@@ -183,7 +179,6 @@ void Heightmap::Create(btScalar& minHeight, btScalar& maxHeight){
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
 		glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-		//glBindTexture(GL_TEXTURE_2D, tex_detail.GetID());
 
 		// Now we want to enter the texture matrix.  This will allow us
 		// to change the tiling of the detail texture.
@@ -300,7 +295,8 @@ void Heightmap::Create(btScalar& minHeight, btScalar& maxHeight){
 void Heightmap::Render(){
 	glPushMatrix();
 //	glScalef(100.0f,100.0f,100.0f);
-//	glTranslatef(-200.0f, -100.0f, -100.f);	
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);	
+	glTranslatef(-BULLET_MAP_SIZE * 0.5f, -100.0f, -BULLET_MAP_SIZE * 0.5f); 
 	glEnable(GL_TEXTURE_2D);
 	glCallList(disp_list_id);
 	glDisable(GL_TEXTURE_2D);
