@@ -41,14 +41,14 @@ bool cGame::Init()
 			// Init Camera 3D
 			m3DCamera.Init();  
 			float lfAspect = (float)mProperties.muiWidth/(float)mProperties.muiHeight;
-			m3DCamera.SetPerspective(45.0f, lfAspect,0.1f,100.0f);
+			m3DCamera.SetPerspective(45.0f, lfAspect,0.1f,1000.0f);
 			//Se pone la cámara en la posición (5,5,5) de nuestro mundo,
 			// apuntando al origen del mismo, e indicando que el vector UP de la cámara apunta hacia arriba.
 			//m3DCamera.SetLookAt( cVec3(5.0f, 5.f, 5.f), cVec3(0.0f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );		
 
 			//Se aleja la cámara para ver bien la escena que vamos a cargar posteriormente.
 			//m3DCamera.SetLookAt( cVec3(5.f, 4.3f, 5.f),cVec3(0.f, 0.f, 0.f), cVec3(0.0f, 1.f, 0.f) );
-			m3DCamera.SetLookAt( cVec3(0.f, 1.5f, 60.f),cVec3(0.f, 1.5f, 0.f), cVec3(0.0f, 1.f, 0.f) );
+			m3DCamera.SetLookAt( cVec3(0.f, 1.5f, 200.f),cVec3(0.f, 1.5f, 0.f), cVec3(0.0f, 1.f, 0.f) );
 
 			//Se inicializa la clase cInputManager que representa el gestor de entrada (keyboard, gamepad, mouse, ...).
 			//Se le pasa la tabla "kaActionMapping" (de InputConfiguration.cpp) que indica la relación entre las acciones y los dispositivos.
@@ -201,10 +201,10 @@ void cGame::Update( float lfTimestep )
 
 	if ( lbmoveFront ) {
 		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, -0.1f ) );
-		lCamaraPos.z += 0.1f;
+		lCamaraPos.z += 10.f;
 		m3DCamera.SetView(lCamaraPos);
 	}else if ( lbmoveBack  ) {
-		lCamaraPos.z -= 0.1f;
+		lCamaraPos.z -= 10.f;
 		m3DCamera.SetView(lCamaraPos);
 		mObject.SetPosition( mObject.GetPosition( ) + cVec3( 0.0f, 0.0f, 0.1f ) );
 	}
@@ -306,10 +306,11 @@ void cGame::Render()
 	cMatrix lWorld;
 	lWorld.LoadIdentity();
 	cGraphicManager::Get().SetWorldMatrix(lWorld);
+
 	// Render the debug lines
 	cGraphicManager::Get().DrawGrid();
 	cGraphicManager::Get().DrawAxis();
-	 
+
 	cGraphicManager::Get().DrawPoint( cVec3(1.5f, 0.0f, 1.5f), cVec3(1.0f, 0.0f, 1.0f) );
 	cGraphicManager::Get().DrawLine( cVec3(-1.5f, 0.0f, -1.5f), cVec3(-1.5f, 0.0f, 1.5f), cVec3(1.0f, 1.0f, 0.0f) );
 
@@ -323,20 +324,21 @@ void cGame::Render()
 	// -------------------------------------------------------------
 	mObject.Render();
 	cSkeletalMesh* lpSkeletonMesh = (cSkeletalMesh*)mSkeletalMesh.GetResource();
-	lpSkeletonMesh->RenderSkeleton();
+	lpSkeletonMesh->RenderSkeleton();	
 
 	// 4.0) Draws debug info of bullet
-	cPhysics::Get().Render();
+	cPhysics::Get().Render();	
 
 	// Render physic objects
 	for ( unsigned int luiIndex = 0; luiIndex < 10; ++luiIndex) {
-		maSphereObjects[luiIndex].Render();
-	}	
+		maSphereObjects[luiIndex].Render();	
+	}		
 	 
 	// 4) Renderizado de Geometría 3D con transparencia
 	// -------------------------------------------------------------
 	// Display the terrain mesh.
 	mHeightmap.Render();
+
 
 	// 5) Activación de Cámara 2D  
 	// -------------------------------------------------------------
