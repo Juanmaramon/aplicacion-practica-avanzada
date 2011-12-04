@@ -26,23 +26,25 @@ void CharacterPos::SetVelocity(int lVel){
 }
 
 void CharacterPos::MoveFront(){
-	mPosition += cVec3( 0.0f, 0.0f, -mDisplacement);
+	mPosition += GetFront() * mDisplacement;
 	mPosDirChange = true;
 }
 
 void CharacterPos::MoveBack(void){
-	mPosition += cVec3( 0.0f, 0.0f, mDisplacement );
+	//mPosition += cVec3( 0.0f, 0.0f, mDisplacement );
+	mPosition -= GetFront() * mDisplacement;
 	mPosDirChange = true;
 }
 
 void CharacterPos::TurnRight(void){
-	mYaw -= mAngVel; 	
+	mYaw -= mAngDisplacement; 	
 }
 
 void CharacterPos::TurnLeft(void){
-	mYaw += mAngVel; 	
+	mYaw += mAngDisplacement; 	
 }
 
 void CharacterPos::Update(float lfTimestep){
 	mDisplacement = mVelocity * lfTimestep;
+	mAngDisplacement = mAngVel * lfTimestep;
 }
