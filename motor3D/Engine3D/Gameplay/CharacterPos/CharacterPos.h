@@ -18,6 +18,8 @@ private:
 	float mAngVel;
 	// Espacio (velocidad * tiempo transcurrido)
 	float mDisplacement;
+	// Velocidad angular depediente del tiempo
+	float mAngDisplacement;
 public:
 	void Init(cVec3 lPosIni, float lYawIni, int lVel, float lAngVel);
 	void DeInit(void);

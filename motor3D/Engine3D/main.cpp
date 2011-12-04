@@ -1,5 +1,5 @@
 // MASTER DE CREACIÓN DE VIDEOJUEGOS UOC-ULL
-// Asignatura: Aplicación Práctica Avanzada de Videojuegos.
+// Asignatura: Proyecto Final - Mad Drive.
 // Octubre, 2011.
 // Juan Manuel Ramón Vigo.
 // Alberto Alfonso Gómez.
@@ -36,9 +36,14 @@ int WINAPI WinMain(
 	   {
 		  //Se calcula el tiempo transcurrido (pasándolo a segundos) desde la iteración anterior
 		  unsigned long luiActualTime = timeGetTime();
+			char buf[2048];
+
+			
 		  float lfTimestep = ((float)(luiActualTime - luiLastTime) 
 							 / 1000.0f);
 		  luiLastTime = luiActualTime;
+		  if (lfTimestep == 0.0f){ lfTimestep = 1.0f;  }
+
 		  //Se llama a la función Update pasándole el tiempo transcurrido, para que actúe igual en máquinas rápidas como lentas, 
 		  // ya la máquina rápida ejecutará más iteraciones pero el tiempo será 
 		  // pequeño, mientras que la máquina lenta ejecuta menos iteraciones con

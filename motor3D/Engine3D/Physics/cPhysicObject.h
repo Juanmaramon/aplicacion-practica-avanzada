@@ -16,8 +16,9 @@ public:
 	inline void SetDrawOffsetMatrix(const cMatrix& lOffset){ mDrawOffsetMatrix = lOffset; }
 	inline cMatrix GetDrawOffsetMatrix( ) { return mDrawOffsetMatrix; }
 	void SetKinematic( );
-	void SetPosition( const cVec3 &lPosition );
+	void SetPosition( const cVec3 &lPosition, float lYaw = 0.0f );
 	cVec3 GetPosition( );
+	void ReloadPhysicPosition(cMatrix &lRotationMatrix, cMatrix &lTranslationMatrix);
 private:
 	btRigidBody *mpPhysicBody;
 	cMatrix mScaleMatrix;
