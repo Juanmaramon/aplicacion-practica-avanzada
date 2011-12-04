@@ -8,11 +8,8 @@
 #include "..\Gameplay\Object\Object.h"
 #include "..\Physics\cPhysics.h"
 #include "..\Physics\cPhysicObject.h"
-
-#include "..\Gameplay\Terrain\Terrain.h"
 #include "..\Gameplay\Terrain\Heightmap.h"
-/*#include "..\Gameplay\Terrain\TerrainTexture.h"
-#include "..\Gameplay\Terrain\TerrainVBO.h"*/
+#include "..\Gameplay\CharacterPos\CharacterPos.h"
 
 //Clase que hace uso del Patrón Singleton definido en Singleton.h, para iniciar, actualizar, dibujar
 // y finalizar el juego
@@ -39,12 +36,7 @@ protected:
 		//cPhysics mPhysics;
 	
 		// Terrain
-		Terrain mTerrain;
 		Heightmap mHeightmap;
-
-		// Heightmap
-/*		TerrainTexture mTerrainTexture;
-		TerrainVBO mTerrainVBO;	*/
 
 public:
 	
