@@ -1,9 +1,7 @@
-
 #include "Camera.h"
 
 //Función que inicializa la clase Camera.
-void cCamera::Init()
-{
+void cCamera::Init(){
 	//Se inicializan las 3 matrices a la identidad:
 	mView.LoadIdentity();
 	mProj.LoadIdentity();
@@ -19,8 +17,7 @@ void cCamera::Init()
 //     arriba (0,1,0).
 void cCamera::SetLookAt( const cVec3 &lvPosition, 
                          const cVec3 &lvTarget, 
-                         const cVec3 &lvUpWorld )
-{
+                         const cVec3 &lvUpWorld ){
    mView.LoadLookAt(lvPosition, lvTarget, lvUpWorld);
    RefreshViewProj();
 }
@@ -35,8 +32,7 @@ void cCamera::SetLookAt( const cVec3 &lvPosition,
 // tiene que ser mayor que 0.
 void cCamera::SetOrtho( float  lfLeft, float  lfRight, 
 						float  lfBottom, float  lfTop, 
-						float  lfZNear, float  lfZNFar )
-{
+						float  lfZNear, float  lfZNFar ){
    mProj.LoadOrtho(lfLeft, lfRight, lfBottom, lfTop, lfZNear, lfZNFar);
    RefreshViewProj();
 }
@@ -48,18 +44,17 @@ void cCamera::SetOrtho( float  lfLeft, float  lfRight,
 // aspecto entre el ancho y el alto y los valores lfZNear y lfZFar que tienen el mismo 
 // significado que en la proyección ortogonal.
 void cCamera::SetPerspective( float  lfFOVY_Rad, float  lfAspect,
-								float  lfZNear, float  lfZFar )
-{
+								float  lfZNear, float  lfZFar ){
    mProj.LoadPerpective(lfFOVY_Rad, lfAspect, lfZNear, lfZFar);
    RefreshViewProj();
 }
 
-/*void cCamera::MoveCamera(float speed){
-	tVector3 vVector = mView - mPos;	// Get the view vector
-	
-	// forward positive camera speed and backward negative camera speed.
-	mPos.x  = mPos.x  + vVector.x * speed;
-	mPos.z  = mPos.z  + vVector.z * speed;
-	mView.x = mView.x + vVector.x * speed;
-	mView.z = mView.z + vVector.z * speed;	
-}*/
+void cCamera::SetYaw(float rotation){
+	cMatrix lYaw; 
+	mView *= lYaw.LoadRotation(mView.GetUp(), rotation) ;  
+}
+
+void cCamera::SetPitch(float rotation){
+	cMatrix lRot; 
+	mView *= lRot.LoadRotation(cVec3(1.0f,0.0f,0.0f), rotation) ;
+}

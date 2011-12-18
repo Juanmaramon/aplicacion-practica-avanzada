@@ -273,6 +273,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Graphics\GodCamera.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Graphics\GodCamera.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Graphics\GraphicManager.cpp"
 				>
 			</File>
@@ -704,6 +712,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Vehicle"
+				>
+				<File
+					RelativePath=".\Gameplay\Vehicle\Vehicle.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Gameplay\Vehicle\Vehicle.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="LoadXML"
@@ -1060,6 +1080,10 @@
 				RelativePath=".\LuaManager\cLuaManager.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Input"
+			>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"

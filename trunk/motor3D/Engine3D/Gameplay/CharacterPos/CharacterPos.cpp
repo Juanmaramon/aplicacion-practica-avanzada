@@ -31,7 +31,6 @@ void CharacterPos::MoveFront(){
 }
 
 void CharacterPos::MoveBack(void){
-	//mPosition += cVec3( 0.0f, 0.0f, mDisplacement );
 	mPosition -= GetFront() * mDisplacement;
 	mPosDirChange = true;
 }

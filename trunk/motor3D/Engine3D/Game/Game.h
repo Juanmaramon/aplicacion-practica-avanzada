@@ -10,6 +10,8 @@
 #include "..\Physics\cPhysicObject.h"
 #include "..\Gameplay\Terrain\Heightmap.h"
 #include "..\Gameplay\CharacterPos\CharacterPos.h"
+#include "..\Graphics\GodCamera.h"
+#include "..\Gameplay\Vehicle\Vehicle.h"
 
 //Clase que hace uso del Patrón Singleton definido en Singleton.h, para iniciar, actualizar, dibujar
 // y finalizar el juego
@@ -37,6 +39,14 @@ protected:
 	
 		// Terrain
 		Heightmap mHeightmap;
+		// Cámara de juego o godmode
+		bool mbInGame;
+		// Modo de rasterizacion solida/wireframe
+		bool mbRasterizationMode;
+		// Camara godmode
+		GodCamera mGodCamera;
+		// Vehiculo 
+		Vehicle mVehicle;
 
 public:
 	
