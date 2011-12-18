@@ -36,7 +36,6 @@ int WINAPI WinMain(
 	   {
 		  //Se calcula el tiempo transcurrido (pasándolo a segundos) desde la iteración anterior
 		  unsigned long luiActualTime = timeGetTime();
-			char buf[2048];
 
 			
 		  float lfTimestep = ((float)(luiActualTime - luiLastTime) 

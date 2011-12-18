@@ -17,6 +17,7 @@ actualizar las acciones correspondientes.
  
 #define IsPressed( ACTION ) cInputManager::Get().GetAction( ACTION ).GetIsPressed();
 #define BecomePressed( ACTION ) cInputManager::Get().GetAction( ACTION ).GetBecomePressed();
+#define GetValue(ACTION) cInputManager::Get().GetAction( ACTION ).GetValue()
 
 class OIS::InputManager;
  

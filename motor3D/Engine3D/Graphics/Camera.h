@@ -5,8 +5,7 @@
 
 #include "..\MathLib\MathLib.h"
 
-class cCamera
-{
+class cCamera{
    public:
       //Función que inicializa la clase Camera.
       void Init();
@@ -61,7 +60,9 @@ class cCamera
 
 	  void SetView(cVec3 view){ mView.SetPosition(view); RefreshViewProj(); }
 
-	  //void MoveCamera(float speed);
+	  // MOdifica la rotacion en el eje Y de la camara
+	  void SetYaw(float rotation);
+	  void SetPitch(float rotation);
 
    private:
 

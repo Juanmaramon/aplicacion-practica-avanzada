@@ -30,6 +30,9 @@ public:
 	// Draws debug info
 	void Render( );
 
+	// Devuelve mundo Bullet
+	btDiscreteDynamicsWorld* GetBulletWorld(){ return mpWorld; };
+
 private:
 	// Bullet world
 	btDiscreteDynamicsWorld* mpWorld;
