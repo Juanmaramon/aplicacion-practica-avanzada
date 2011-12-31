@@ -46,6 +46,8 @@ void cPhysics::Init( ){
 	GetNewBody( lpGroundShape, 0.0f, cVec3( 20.0f, 0.0f, 0.0f ));
 	GetNewBody( lpGroundShape, 0.0f, cVec3( 0.0f, 0.0f, -20.0f ));
 	GetNewBody( lpGroundShape, 0.0f, cVec3( 0.0f, 0.0f, 20.0f ));	*/
+
+
 	btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),1);
 	mapCollisionShapes.push_back(groundShape);
 	GetNewBody( groundShape, 0.0f, cVec3( 0.0f, -5.0f, 0.0f ));	
@@ -110,7 +112,7 @@ btCollisionShape* cPhysics::GetNewBoxShape( const cVec3& lHalfSize ){
 	return lShape;
 }
 
-btRigidBody* cPhysics::GetNewBody( btCollisionShape* lpShape, float lfMass, const cVec3& lPosition ){
+btRigidBody* cPhysics::GetNewBody( btCollisionShape* lpShape, float lfMass, const cVec3& lPosition, float lRotation){
 	/// Create Dynamic Objects
 	btTransform lStartTransform;
 	lStartTransform.setIdentity();
@@ -122,7 +124,14 @@ btRigidBody* cPhysics::GetNewBody( btCollisionShape* lpShape, float lfMass, cons
 	if ( lbIsDynamic ){
 		lpShape->calculateLocalInertia(lfMass,lLocalInertia);
 	}
+
 	lStartTransform.setOrigin( Local2Bullet( lPosition ) );
+
+	if (lRotation != 0.0f){
+		btQuaternion btq;
+		btq.setRotation(btVector3(0.0f, 1.0f, 0.0f), lRotation); 
+		lStartTransform.setRotation(btq);
+	}
 
 	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 	btDefaultMotionState* lpMotionState = new btDefaultMotionState( lStartTransform );

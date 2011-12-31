@@ -36,7 +36,6 @@ int WINAPI WinMain(
 	   {
 		  //Se calcula el tiempo transcurrido (pasándolo a segundos) desde la iteración anterior
 		  unsigned long luiActualTime = timeGetTime();
-
 			
 		  float lfTimestep = ((float)(luiActualTime - luiLastTime) 
 							 / 1000.0f);
@@ -52,6 +51,10 @@ int WINAPI WinMain(
 		  cGame::Get().Render();
 	   }
 	   //Se finaliza el juego.
-	   cGame::Get().Deinit();  
+	   cGame::Get().Deinit();
+	   char buff[255];
+	   int exist_leaks = _CrtDumpMemoryLeaks();
+	   sprintf(buff, "Existen leaks de memoria? %d\n", exist_leaks);
+	   OutputDebugStr(buff);
    }
 }
