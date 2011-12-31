@@ -20,6 +20,7 @@ subject to the following restrictions:
 
 #include "btVector3.h"
 #include "btQuadWord.h"
+#include "..\..\..\..\MathLib\Vec\Vec3.h"
 
 /**@brief The btQuaternion implements quaternion to perform linear algebra rotations in combination with btMatrix3x3, btVector3 and btTransform. */
 class btQuaternion : public btQuadWord {
@@ -419,6 +420,21 @@ shortestArcQuatNormalize2(btVector3& v0,btVector3& v1)
 	v0.normalize();
 	v1.normalize();
 	return shortestArcQuat(v0,v1);
+}
+
+//------------------------------------------------------------------------------
+//! Convert Quaternion to Euler (btQuaternion to irr::core::vector3df)
+//! euler is measured in radians
+SIMD_FORCE_INLINE void QuaternionToEulerXYZ(const btQuaternion& quat, cVec3 euler)
+{
+  float w=quat.getW(), x=quat.getX(), y=quat.getY(), z=quat.getZ();
+  double   sqx = x*x, sqy = y*y, sqz = z*z;
+  // heading
+  euler.z = atan2(btScalar(2.0*(z*w+x*y)), btScalar(1.0 - 2.0*(sqy + sqz)));
+  // bank
+  euler.x = atan2(btScalar(2.0*(x*w+y*z)), btScalar(1.0 - 2.0*(sqx + sqy)));
+  // attitude
+  euler.y = asin(btScalar(2.0*(-x*z + y*w)));
 }
 
 #endif //BT_SIMD__QUATERNION_H_

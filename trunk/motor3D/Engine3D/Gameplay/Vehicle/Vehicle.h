@@ -17,6 +17,10 @@ subject to the following restrictions:
 
 #include "../../Libraries/Bullet/include/BulletDynamics/Vehicle/btRaycastVehicle.h"
 #include "../../Mathlib/Mathlib.h"
+#include "../../Libraries/Bullet/include/BulletCollision/CollisionShapes/btShapeHull.h"
+
+#define PHYSCAR_SCALE 1
+#define CUBE_HALF_EXTENTS 1
 
 ///Vehicle use the built-in raycast vehicle
 class Vehicle{
@@ -25,13 +29,14 @@ public:
 
 	btRigidBody* m_carChassis;
 	btRaycastVehicle*	m_vehicle;
-	class btTriangleIndexVertexArray*	m_indexVertexArrays;
-	btVector3*	m_vertices;
 	btCollisionShape*	m_wheelShape;
 	btVehicleRaycaster*	m_vehicleRayCaster;
 	btRaycastVehicle::btVehicleTuning	m_tuning;
+	class btCompoundShape* m_compound;
+	btCollisionShape* m_chassisShape;
 
 	Vehicle();
+	~Vehicle(void);
 	void initPhysics(void);
 	void ResetVehicleParams();
 	void renderme();
@@ -42,9 +47,22 @@ public:
 	void SteeringRight(float lfTimestep);
 
 	cVec3 GetChasisPos(void);
+	cVec3 GetChasisRot(void);
+	float getEngineForce(void);
+	void setEngineForce(float newForce);
+	float getBreakingForce(void);
+	void setBreakingForce(float newForce);
 
-	cVec3 GerChasisRot(void);
-
+	/* añadido para depuracion de ruedas */
+	struct ShapeCache{
+		struct Edge { btVector3 n[2];int v[2]; };
+		ShapeCache(btConvexShape* s) : m_shapehull(s) {}
+		btShapeHull					m_shapehull;
+		btAlignedObjectArray<Edge>	m_edges;
+	};
+	btAlignedObjectArray<ShapeCache*>	m_shapecaches;
+	void debugWheels(btScalar* m, const btCollisionShape* shape, const btVector3& color,int	debugMode,const btVector3& worldBoundsMin,const btVector3& worldBoundsMax);
+	ShapeCache*	cache(btConvexShape*);
 
 };
 

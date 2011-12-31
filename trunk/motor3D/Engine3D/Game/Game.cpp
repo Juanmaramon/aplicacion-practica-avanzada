@@ -261,7 +261,7 @@ void cGame::Update( float lfTimestep )
 								   vVector.z),
 								   CharacterPos::Get().GetCharacterPosition(), 
 								   cVec3(0.0f, 1.f, 0.f) );*/
-		cVec3 vVector = mVehicle.GetChasisPos() - mVehicle.GerChasisRot() * lfDistance;
+		cVec3 vVector = mVehicle.GetChasisPos() - mVehicle.GetChasisRot() * lfDistance;
 
 		m3DCamera.SetLookAt( cVec3(vVector.x,
 								   vVector.y + 3.f,
@@ -296,7 +296,7 @@ void cGame::Update( float lfTimestep )
 	mObject.SetPosition(CharacterPos::Get().GetCharacterPosition(), CharacterPos::Get().GetYaw());
 
 	// Actualiza personaje
-	//mObject.Update(lfTimestep);
+	mObject.Update(lfTimestep);
 
 	// Update bullet physics object
 	cPhysics::Get().Update(lfTimestep);
@@ -482,7 +482,7 @@ bool cGame::LoadResources( void )
 bool cGame::Deinit()
 {
 	//Se deinicializa en el orden inverso a la inicialización:
-
+	mVehicle.~Vehicle();
 	cMaterialManager::Get().Deinit();
 
 	//Se libera el manejador de escenas.

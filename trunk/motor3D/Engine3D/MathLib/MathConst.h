@@ -11,4 +11,6 @@
 /// Constante PI/2
 #define HALF_PI  (PI / 2.0f )
 
+#define BPU_180_PI = 180.0f/PI;
+
 #endif
