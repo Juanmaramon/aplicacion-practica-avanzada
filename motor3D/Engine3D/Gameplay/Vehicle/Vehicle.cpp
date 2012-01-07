@@ -1,6 +1,7 @@
 #include "Vehicle.h"
 #include "..\..\Physics\cPhysics.h"
 #include "..\..\Graphics\GLHeaders.h"
+#include "..\..\Graphics\GraphicManager.h"
 
 int rightIndex = 0;
 int upIndex = 1;
@@ -15,41 +16,41 @@ const int maxOverlap = 65535;
 float	gEngineForce = 0.f;
 float	gBreakingForce = 0.f;
 
-float	maxEngineForce = 100000.f;//this should be engine/velocity dependent
-float	maxBreakingForce = 10000.f;
+float	maxEngineForce = 1500.f; // 100000.f;//this should be engine/velocity dependent
+float	maxBreakingForce = 100.f; // 10000.f;
 
 float	gVehicleSteering = 0.f;
 float	steeringIncrement = 0.04f;
 float	steeringClamp = 0.3f;
 
 float	wheelRadius =  0.35f * PHYSCAR_SCALE;	//** 0.5f;
-float	wheelWidth = 0.2f * PHYSCAR_SCALE;		//** 0.4f;
+float	wheelWidth = 0.2f * PHYSCAR_SCALE;		//* 0.4f;
 
 // The coefficient of friction between the tyre and the ground. 
 // Should be about 0.8 for realistic cars, but can increased for better handling.
 // Set large (10000.0) for kart racers
-float	wheelFriction = 10;						//** 1000;//BT_LARGE_FLOAT;
+float	wheelFriction = 10;						// 1000;//BT_LARGE_FLOAT;
 
 // The stiffness constant for the suspension. 
 // 10.0 - Offroad buggy, 50.0 - Sports car, 200.0 - F1 Car
-float	suspensionStiffness = 50.f;				//** 20.f;
+float	suspensionStiffness = 50.f;				// 20.f;
 
 // The damping coefficient for when the suspension is expanding. 
 // See the comments for wheelsDampingCompression for how to set k.
 // wheelsDampingRelaxation should be slightly larger than wheelsDampingCompression, eg 0.2 to 0.5
-float	suspensionDamping =	 0.3f * 2.0f * btSqrt(suspensionStiffness);	//** 2.3f;
+float	suspensionDamping =	 0.3f * 2.0f * btSqrt(suspensionStiffness);	// 2.3f;
 
 // The damping coefficient for when the suspension is compressed. 
 // Set to k * 2.0 * btSqrt(suspensionStiffness) so k is proportional to critical damping.
 // k = 0.0 undamped & bouncy, k = 1.0 critical damping
 // 0.1 to 0.3 are good values
-float	suspensionCompression = 0.2f * 2.0f * btSqrt(suspensionStiffness);	//** 4.4f;
+float	suspensionCompression = 0.2f * 2.0f * btSqrt(suspensionStiffness);	// 4.4f;
 
 // Reduces the rolling torque applied from the wheels that cause the vehicle to roll over.
 // This is a bit of a hack, but it's quite effective. 0.0 = no roll, 1.0 = physical behaviour.
 // If m_frictionSlip is too high, you'll need to reduce this to stop the vehicle rolling over.
 // You should also try lowering the vehicle's centre of mass
-float	rollInfluence = 1.f;							//** 0.1f;  //1.0f;
+float	rollInfluence = 0.5f;							// 0.1f;  //1.0f;	*/
 
 /*float	gEngineForce = 0.f;
 float	gBreakingForce = 0.f;
@@ -70,7 +71,6 @@ float	rollInfluence = 0.1f;//1.0f;
 
 
 btScalar suspensionRestLength(0.6);*/
-
 
 btVector3 wheelDirectionCS0(0,-1,0);
 btVector3 wheelAxleCS(-1,0,0);
@@ -114,7 +114,7 @@ void Vehicle::initPhysics(){
 
 	float mass = 800.f;
 	
-	m_carChassis = cPhysics::Get().GetNewBody(m_compound, mass, cVec3(0.f, 0.f, 0.f), 398.0f); //chassisShape
+	m_carChassis = cPhysics::Get().GetNewBody(m_compound, mass, cVec3(0.f, 0.f, 0.f), 329.9f); //chassisShape
 	//m_carChassis->setDamping(0.2,0.2);
 	
 	m_wheelShape = new btCylinderShapeX(btVector3(wheelWidth,wheelRadius,wheelRadius));
@@ -187,7 +187,7 @@ void Vehicle::ResetVehicleParams(){
 		}
 	}
 }
-#include <windows.h>
+
 void Vehicle::renderme(){
 
 	btScalar m[16];
@@ -202,111 +202,59 @@ void Vehicle::renderme(){
 	{
 		//synchronize the wheels with the (interpolated) chassis worldtransform
 		m_vehicle->updateWheelTransform(i,true);
+	
 		//draw wheels (cylinders)
 		m_vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix(m);
 		glPushMatrix();
-		btVector3 p = m_vehicle->getWheelInfo(i).m_worldTransform.getOrigin();
-		cVec3 rot;
-		btQuaternion btq = m_vehicle->getWheelInfo(i).m_worldTransform.getRotation();
+		cVec3 lTranslation = cPhysics::Get().Bullet2Local(m_vehicle->getWheelInfo(i).m_worldTransform.getOrigin());
 		
-		/*QuaternionToEulerXYZ(btq, rot);
-		rot = rot * (180.0f/PI);*/
-		glRotatef(btq.getAngle(), 0.0f, 1.0f, 0.0f);
-		glTranslatef(p.getX(), p.getY(), p.getZ());
+		cMatrix lTransMatrix, lRotMatrix;
+		lTransMatrix.LoadTranslation(lTranslation);
+		btQuaternion btq = m_vehicle->getWheelInfo(i).m_worldTransform.getRotation();
+		cVec3 lqAxis = cPhysics::Get().Bullet2Local(btq.getAxis());
+		lRotMatrix.LoadRotation(lqAxis, btq.getAngle());
+
+		cGraphicManager::Get().SetWorldMatrix(lRotMatrix * lTransMatrix);
 		debugWheels(m,m_wheelShape,wheelColor,1,worldBoundsMin,worldBoundsMax);
+		
+		lTransMatrix.LoadIdentity();
+		cGraphicManager::Get().SetWorldMatrix(lTransMatrix);
+
 		glPopMatrix();
 	}
-
-	//DemoApplication::renderme();
 }
 
-/*void Vehicle::Update(){
-	
-	{			
-		int wheelIndex = 2;
-		m_vehicle->applyEngineForce(gEngineForce,wheelIndex);
-		m_vehicle->setBrake(gBreakingForce,wheelIndex);
-		wheelIndex = 3;
-		m_vehicle->applyEngineForce(gEngineForce,wheelIndex);
-		m_vehicle->setBrake(gBreakingForce,wheelIndex);
-
-		wheelIndex = 0;
-		m_vehicle->setSteeringValue(gVehicleSteering,wheelIndex);
-		wheelIndex = 1;
-		m_vehicle->setSteeringValue(gVehicleSteering,wheelIndex);
-
-	}
-}*/
-
 void Vehicle::Update(){
-		// for rear wheel drive cars
-		for (int i = 0; i < m_vehicle->getNumWheels(); i++){
-			if (m_vehicle->getWheelInfo(i).m_bIsFrontWheel == true){
-				m_vehicle->setSteeringValue(gVehicleSteering, i);
-			}
-			else{
-				m_vehicle->applyEngineForce(gEngineForce, i);
-				m_vehicle->setBrake(gBreakingForce, i);
-			}
+	// for rear wheel drive cars
+	for (int i = 0; i < m_vehicle->getNumWheels(); i++){
+		if (m_vehicle->getWheelInfo(i).m_bIsFrontWheel == true){
+			m_vehicle->setSteeringValue(gVehicleSteering, i);
 		}
-
-		// set pos
-		btVector3 p = m_carChassis->getCenterOfMassPosition();
-		//m_chassisNode->setPosition(cVec3(p.getX(), p.getY(), p.getZ()));
-
-		// set rot
-		cVec3 rot;
-		btQuaternion btq = m_carChassis->getOrientation();
-		QuaternionToEulerXYZ(btq, rot);
-		rot = rot * (180.f / PI);
-		
-		//m_chassisNode->setRotation(rot );//+ mChassisRotOffset);
-
-		//draw wheels
-		for (int i = 0; i < m_vehicle->getNumWheels(); i++){
-			//synchronize the wheels with the (interpolated) chassis worldtransform
-			m_vehicle->updateWheelTransform(i, true);
-
-			void* wheelNode = m_vehicle->getWheelInfo(i).m_clientInfo;
-
-			if (wheelNode != NULL){
-				// this works too
-				//m_vehicle->getWheelInfo(i).m_worldTransform.getOpenGLMatrix((btScalar*)&mat);
-				//wheelNode->setPosition(mat.getTranslation());
-				//wheelNode->setRotation(mat.getRotationDegrees());
-
-				// set pos
-				btVector3 p = m_vehicle->getWheelInfo(i).m_worldTransform.getOrigin();
-				//wheelNode->setPosition(cVec3(p.getX(), p.getY(), p.getZ()));
-
-				// set rot
-				cVec3 rot;
-				btQuaternion btq = m_vehicle->getWheelInfo(i).m_worldTransform.getRotation();
-				QuaternionToEulerXYZ(btq, rot);
-				rot = rot * (180.0f/PI);
-				//wheelNode->setRotation(rot);
-			}
+		else{
+			m_vehicle->applyEngineForce(gEngineForce, i);
+			m_vehicle->setBrake(gBreakingForce, i);
 		}
+	}
 }
 
 void Vehicle::MoveForward(float lfTimestep){
-	gEngineForce = maxEngineForce * lfTimestep;
+	gEngineForce = maxEngineForce; // * lfTimestep;
 	gBreakingForce = 0.f;
 }
 
 void Vehicle::Break(float lfTimestep){
-	gBreakingForce = maxBreakingForce * lfTimestep; 
+	gBreakingForce = maxBreakingForce; // * lfTimestep; 
 	gEngineForce = 0.f;
 }
 
 void Vehicle::SteeringLeft(float lfTimestep){
-	gVehicleSteering += steeringIncrement * lfTimestep;
+	gVehicleSteering += steeringIncrement; // * lfTimestep;
 	if (gVehicleSteering > steeringClamp)
 		gVehicleSteering = steeringClamp;
 }
 
 void Vehicle::SteeringRight(float lfTimestep){
-	gVehicleSteering -= steeringIncrement * lfTimestep;
+	gVehicleSteering -= steeringIncrement; // * lfTimestep;
 	if (gVehicleSteering < -steeringClamp)
 		gVehicleSteering = -steeringClamp;
 }
@@ -385,7 +333,7 @@ Vehicle::ShapeCache*		Vehicle::cache(btConvexShape* shape)
 
 void Vehicle::debugWheels(btScalar* m, const btCollisionShape* shape, const btVector3& color,int	debugMode,const btVector3& worldBoundsMin,const btVector3& worldBoundsMax){
 	ShapeCache*	sc=cache((btConvexShape*)shape);
-	//glutSolidCube(1.0);
+
 	btShapeHull* hull = &sc->m_shapehull; //(btShapeHull*)shape->getUserPointer();
 
 	if (hull->numTriangles () > 0)

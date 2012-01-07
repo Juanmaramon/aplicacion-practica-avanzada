@@ -117,21 +117,28 @@ btRigidBody* cPhysics::GetNewBody( btCollisionShape* lpShape, float lfMass, cons
 	btTransform lStartTransform;
 	lStartTransform.setIdentity();
 
-	//rigidbody is dynamic if and only if mass is non zero, otherwise 
-	static bool lbIsDynamic = (lfMass != 0.f);
+	//rigidbody is dynamic if and only if mass is non zero, otherwise static
+	bool lbIsDynamic = (lfMass != 0.f);
 	btVector3 lLocalInertia( 0, 0, 0);
 
 	if ( lbIsDynamic ){
 		lpShape->calculateLocalInertia(lfMass,lLocalInertia);
 	}
 
-	lStartTransform.setOrigin( Local2Bullet( lPosition ) );
+	cMatrix lTransMatrix, lTransform;
+	lTransMatrix.LoadTranslation(lPosition);
+	lTransform = lTransMatrix;
 
 	if (lRotation != 0.0f){
-		btQuaternion btq;
-		btq.setRotation(btVector3(0.0f, 1.0f, 0.0f), lRotation); 
-		lStartTransform.setRotation(btq);
+		lTransform.LoadIdentity();
+			
+		cMatrix lRotMatrix;
+		lRotMatrix.LoadIdentity();
+		lRotMatrix.LoadRotation(cVec3(0.f, 1.f, 0.f), lRotation);
+		lTransform = lRotMatrix * lTransMatrix;
 	}
+	lStartTransform = Local2Bullet(lTransform);
+	//lStartTransform.setOrigin( Local2Bullet( lPosition ) );
 
 	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 	btDefaultMotionState* lpMotionState = new btDefaultMotionState( lStartTransform );
