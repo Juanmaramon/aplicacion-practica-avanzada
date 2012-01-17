@@ -115,6 +115,7 @@ void Vehicle::initPhysics(){
 	float mass = 800.f;
 	
 	m_carChassis = cPhysics::Get().GetNewBody(m_compound, mass, cVec3(0.f, 0.f, 0.f), 329.9f); //chassisShape
+
 	//m_carChassis->setDamping(0.2,0.2);
 	
 	m_wheelShape = new btCylinderShapeX(btVector3(wheelWidth,wheelRadius,wheelRadius));
@@ -176,6 +177,16 @@ void Vehicle::ResetVehicleParams(){
 	m_carChassis->setCenterOfMassTransform(btTransform::getIdentity());
 	m_carChassis->setLinearVelocity(btVector3(0, 0, 0));
 	m_carChassis->setAngularVelocity(btVector3(0, 0, 0));
+
+	// Posicion inicial
+	cMatrix lTransMatrix, lRotMatrix, lTransform;
+	lTransMatrix.LoadTranslation(cVec3(0.f, 0.f, 0.f));
+	lRotMatrix.LoadIdentity();
+
+	lRotMatrix.LoadRotation(cVec3(0.f, 1.f, 0.f), C_720PI);
+	lTransform = lRotMatrix * lTransMatrix;
+	m_carChassis->setWorldTransform(cPhysics::Get().Local2Bullet(lTransform));
+
 	cPhysics::Get().GetBulletWorld()->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(m_carChassis->getBroadphaseHandle(), cPhysics::Get().GetBulletWorld()->getDispatcher());
 	if (m_vehicle)
 	{
@@ -268,7 +279,19 @@ cVec3 Vehicle::GetChasisPos(void){
 }
 
 cVec3 Vehicle::GetChasisRot(){
-	return  cVec3(   sinf(gVehicleSteering),  0.0f, cosf(gVehicleSteering) ); 
+	//return  cVec3(   sinf(gVehicleSteering),  0.0f, cosf(gVehicleSteering) ); 
+	//return  cVec3(   sinf(mYaw),  0.0f, cosf(mYaw) ); 
+
+	btTransform chassisWorldTrans;
+	m_carChassis->getMotionState()->getWorldTransform(chassisWorldTrans);
+	
+	btQuaternion lbtq = chassisWorldTrans.getRotation();
+	cVec3 rot = cPhysics::Get().Bullet2Local(lbtq.getAxis() * lbtq.getAngle());
+
+	return rot;
+
+	//float rotation = lbtq.angle(lbtq);
+	//return  cVec3(   sinf(rotation),  0.0f, cosf(rotation) ); 
 }
 
 float Vehicle::getEngineForce(void){
